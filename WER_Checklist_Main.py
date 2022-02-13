@@ -1,5 +1,6 @@
 #Project: WER checklist
 #Date: Feb 11, 2022
+#Remark: This page consist of user interface for user input. It uses tkinter GUI
 
 from tkinter import *
 from tkcalendar import DateEntry
