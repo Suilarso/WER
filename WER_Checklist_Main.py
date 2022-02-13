@@ -1,3 +1,6 @@
+#Project: WER checklist
+#Date: Feb 11, 2022
+
 from tkinter import *
 from tkcalendar import DateEntry
 
