@@ -63,6 +63,13 @@ CHAIN_CHECK_BUTTON_COL = 5
 STRAPS_CHECK_BUTTON_ROW = 15
 STRAPS_CHECK_BUTTON_COL = 5
 
+PARTS_IN_BLUE_BIN_ROW = 17
+PARTS_IN_BLUE_BIN_COL = 1
+NOTE_LABEL_ROW = 19
+NOTE_LABEL_COL = 0
+NOTE_ENTRY_ROW = 19
+NOTE_ENTRY_COL = 1
+
 #SJ0130222 - Ideally the products type list should be stored in a database; the setback of reading from a List
 #SJ0130222 - is that there is a need to write a code to allow user to do data entry into the database.
 productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heater Core', 'Radiator Core',
@@ -97,7 +104,7 @@ class WER_Main:
         self.workOrderEntry.grid(row=WORK_ORDER_ENTRY_ROW, column=WORK_ORDER_ENTRY_COL)
 
         #SJ6120222 - Input field for Date received
-        self.dateReceivedLabel = Label(text='Date Received: ').grid(row=DATE_RECEIVED_LABEL_ROW, column=DATE_RECEIVED_LABEL_COL)
+        self.dateReceivedLabel = Label(master, text='Date Received: ').grid(row=DATE_RECEIVED_LABEL_ROW, column=DATE_RECEIVED_LABEL_COL)
         self.dateReceivedEntry = DateEntry(master, values="Text", year=2022, state="readonly", date_pattern="yyyy-mm-dd")
         self.dateReceivedEntry.grid(row=DATE_RECEIVED_ENTRY_ROW, column=DATE_RECEIVED_ENTRY_COL, padx=20, pady=5, sticky=W)
 
@@ -118,7 +125,7 @@ class WER_Main:
 
         #SJ6120222 - Input field for pictures
         pictureStatus = IntVar()
-        self.pictureCheckButton = Checkbutton(text='Pictures', var=pictureStatus)
+        self.pictureCheckButton = Checkbutton(master, text='Pictures', var=pictureStatus)
         self.pictureCheckButton.grid(row=PICTURE_CHECK_BUTTON_ROW, column=PICTURE_CHECK_BUTTON_COL)
 
         #SJ0130222 - Input field for product types
@@ -128,6 +135,7 @@ class WER_Main:
             self.productsTypelistbox.insert(END, productItem)
         # self.productsTypelistbox.pack()
         self.productsTypelistbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+        numberOfParts[SENSORS] = IntVar()
 
         #SJ1140222 - Check button fields for number of parts
         numberOfPartsFrame = Frame()
@@ -139,7 +147,6 @@ class WER_Main:
         self.hosesCheckButton = Checkbutton(numberOfPartsFrame, text='Hoses ', var=numberOfParts[HOSES])
         self.hosesCheckButton.grid(row=HOSES_CHECK_BUTTON_ROW, column=HOSES_CHECK_BUTTON_COL)
 
-        numberOfParts[SENSORS] = IntVar()
         self.sensorsCheckButton = Checkbutton(numberOfPartsFrame, text='Sensors ', var=numberOfParts[SENSORS])
         self.sensorsCheckButton.grid(row=SENSORS_CHECK_BUTTON_ROW, column=SENSORS_CHECK_BUTTON_COL)
 
@@ -172,6 +179,15 @@ class WER_Main:
         self.strapsCheckButton.grid(row=STRAPS_CHECK_BUTTON_ROW, column=STRAPS_CHECK_BUTTON_COL)
         numberOfPartsFrame.grid(row=FITTINGS_CHECK_BUTTON_ROW, column=FITTINGS_CHECK_BUTTON_COL)
 
+        #SJ3160222 - Check box field for parts in blue bin
+        partsInBlueBin = IntVar()
+        self.partsInBlueBinCheckButton = Checkbutton(master, text='Are parts in a Blue Bin? ', var=partsInBlueBin)
+        self.partsInBlueBinCheckButton.grid(row=PARTS_IN_BLUE_BIN_ROW, column=PARTS_IN_BLUE_BIN_COL)
+
+        #SJ3160222 - Text field for notes
+        self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
+        self.notesTextbox = Text(master, font=('Verdana', 16), height=6, width=40)
+        self.notesTextbox.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
         #self.button = Button(text='Click me', command=self.callback)
         #self.label.grid(row=0, column=0)
         #self.button.grid(row=1, column=0)
