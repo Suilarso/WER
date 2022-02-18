@@ -70,7 +70,13 @@ NOTE_LABEL_COL = 0
 NOTE_ENTRY_ROW = 19
 NOTE_ENTRY_COL = 1
 
-#SJ0130222 - Ideally the products type list should be stored in a database; the setback of reading from a List
+OUTPUT_PAD_ROW = 21
+OUTPUT_PAD_COL = 2
+
+SAVE_BUTTON_ROW = 21
+SAVE_BUTTON_COL = 6
+
+#SJ0130222 - Ideally the products type list should be stored in a database; the setback of reading from a database
 #SJ0130222 - is that there is a need to write a code to allow user to do data entry into the database.
 productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heater Core', 'Radiator Core',
 'DPF', 'DPF-DOC Combo', 'EGR', 'Coolant Pipe', 'Oil Cooler', 'AC Hose', 'Cooling Module', 'Other']
@@ -89,14 +95,20 @@ TOTAL_NUMBER_OF_PARTS = 10
 
 numberOfParts = [0] * TOTAL_NUMBER_OF_PARTS
 
+customerName = ''
+outputPad = ''
+
 class WER_Main:
     def __init__(self, master):
         master.title('West End Radiators')
 
         #SJ5110222 - Input field for customer name
+        global customerName
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
-        self.customerEntry = Entry(master)
-        self.customerEntry.grid(row=CUSTOMER_ENTRY_ROW, column=CUSTOMER_ENTRY_COL)
+        #self.customerEntry = Entry(master)
+        #self.customerEntry.grid(row=CUSTOMER_ENTRY_ROW, column=CUSTOMER_ENTRY_COL)
+        customerName = Entry(master)
+        customerName.grid(row=CUSTOMER_ENTRY_ROW, column=CUSTOMER_ENTRY_COL)
 
         #SJ5110222 - Input field for work order
         self.workOrderLabel = Label(master, text='WO: ').grid(row=WORK_ORDER_LABEL_ROW, column=WORK_ORDER_LABEL_COL)
@@ -188,12 +200,22 @@ class WER_Main:
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
         self.notesTextbox = Text(master, font=('Verdana', 16), height=6, width=40)
         self.notesTextbox.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
-        #self.button = Button(text='Click me', command=self.callback)
-        #self.label.grid(row=0, column=0)
-        #self.button.grid(row=1, column=0)
 
-    def callback(self):
-        self.label.configure(text='Button clicked')
+        global outputPad
+        outputPad = Entry(master)
+        outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
+
+        self.saveButton = Button(text='Save', command=lambda x=master: self.saveCallback(x))
+        #self.label.grid(row=0, column=0)
+        self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
+
+    def saveCallback(self, master):
+        global outputPad
+        global customerName
+        self.custo = customerName.get()
+        outputPad.insert(0, self.custo)
+        #print('customerEntry is: ', customerEntry.get())
+        #self.label.configure(text='Button clicked')
 
 
 root = Tk()
@@ -201,3 +223,13 @@ root = Tk()
 app = WER_Main(root)
 
 mainloop()
+
+"""
+label = Label(text='Not clicked')
+button = Button(text='Click me', command=callback)
+label.grid(row=0, column=0)
+button.grid(row=1, column=0)
+
+Button(text=alphabet[i], command = lambda x=i: callback(x))
+
+"""
