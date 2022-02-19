@@ -98,6 +98,7 @@ TOTAL_NUMBER_OF_PARTS = 10
 numberOfParts = [0] * TOTAL_NUMBER_OF_PARTS
 
 customerName = ''
+productsTypelistbox = []
 outputPad = ''
 
 class WER_Main:
@@ -144,12 +145,15 @@ class WER_Main:
 
         #SJ0130222 - Input field for product types
         self.productsTypeLabel = Label(master, text='Received items: ').grid(row=PRODUCTS_TYPE_LABEL_ROW, column=PRODUCTS_TYPE_LABEL_COL)
-        self.productsTypelistbox = Listbox(master, selectmode=MULTIPLE)
+        #self.productsTypelistbox = Listbox(master, selectmode=MULTIPLE)
+        #for productItem in productsType:
+        #    self.productsTypelistbox.insert(END, productItem)
+        #self.productsTypelistbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+        global productsTypelistbox
+        productsTypelistbox = Listbox(master, selectmode=MULTIPLE)
         for productItem in productsType:
-            self.productsTypelistbox.insert(END, productItem)
-        # self.productsTypelistbox.pack()
-        self.productsTypelistbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
-        numberOfParts[SENSORS] = IntVar()
+            productsTypelistbox.insert(END, productItem)
+        productsTypelistbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
 
         #SJ1140222 - Check button fields for number of parts
         numberOfPartsFrame = Frame()
@@ -161,6 +165,7 @@ class WER_Main:
         self.hosesCheckButton = Checkbutton(numberOfPartsFrame, text='Hoses ', var=numberOfParts[HOSES])
         self.hosesCheckButton.grid(row=HOSES_CHECK_BUTTON_ROW, column=HOSES_CHECK_BUTTON_COL)
 
+        numberOfParts[SENSORS] = IntVar()
         self.sensorsCheckButton = Checkbutton(numberOfPartsFrame, text='Sensors ', var=numberOfParts[SENSORS])
         self.sensorsCheckButton.grid(row=SENSORS_CHECK_BUTTON_ROW, column=SENSORS_CHECK_BUTTON_COL)
 
@@ -204,8 +209,8 @@ class WER_Main:
         self.notesTextbox.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
 
         global outputPad
-        #outputPad = Entry(master)
-        #outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
+        outputPad = Entry(master)
+        outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
 
         self.cancelButton = Button(text='Cancel', command=lambda x=master: self.cancelCallback(x))
         #self.label.grid(row=0, column=0)
@@ -224,8 +229,10 @@ class WER_Main:
     def saveCallback(self, master):
         #global outputPad
         global customerName
+        global productsTypelistbox
         self.custo = customerName.get()
-        #outputPad.insert(0, self.custo)
+        self.productsTypeList = productsTypelistbox.curselection()
+        outputPad.insert(0, self.productsTypeList)
         #print('customerEntry is: ', customerEntry.get())
         #self.label.configure(text='Button clicked')
 
