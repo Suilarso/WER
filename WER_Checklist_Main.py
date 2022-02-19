@@ -66,13 +66,15 @@ STRAPS_CHECK_BUTTON_COL = 5
 PARTS_IN_BLUE_BIN_ROW = 17
 PARTS_IN_BLUE_BIN_COL = 1
 NOTE_LABEL_ROW = 19
-NOTE_LABEL_COL = 0
+NOTE_LABEL_COL = 2
 NOTE_ENTRY_ROW = 19
-NOTE_ENTRY_COL = 1
+NOTE_ENTRY_COL = 3
 
 OUTPUT_PAD_ROW = 21
 OUTPUT_PAD_COL = 2
 
+CANCEL_BUTTON_ROW = 21
+CANCEL_BUTTON_COL = 2
 SAVE_BUTTON_ROW = 21
 SAVE_BUTTON_COL = 6
 
@@ -198,22 +200,32 @@ class WER_Main:
 
         #SJ3160222 - Text field for notes
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
-        self.notesTextbox = Text(master, font=('Verdana', 16), height=6, width=40)
+        self.notesTextbox = Text(master, font=('Verdana', 16), height=6, width=20)
         self.notesTextbox.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
 
         global outputPad
-        outputPad = Entry(master)
-        outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
+        #outputPad = Entry(master)
+        #outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
+
+        self.cancelButton = Button(text='Cancel', command=lambda x=master: self.cancelCallback(x))
+        #self.label.grid(row=0, column=0)
+        self.cancelButton.grid(row=CANCEL_BUTTON_ROW, column=CANCEL_BUTTON_COL)
 
         self.saveButton = Button(text='Save', command=lambda x=master: self.saveCallback(x))
         #self.label.grid(row=0, column=0)
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
 
+    def cancelCallback(self, master):
+        #global outputPad
+        global customerName
+        #self.custo = customerName.get()
+        #outputPad.insert(0, self.custo)
+
     def saveCallback(self, master):
-        global outputPad
+        #global outputPad
         global customerName
         self.custo = customerName.get()
-        outputPad.insert(0, self.custo)
+        #outputPad.insert(0, self.custo)
         #print('customerEntry is: ', customerEntry.get())
         #self.label.configure(text='Button clicked')
 
