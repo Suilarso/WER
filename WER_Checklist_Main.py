@@ -34,13 +34,18 @@ OF_LABEL_ROW = 4
 OF_LABEL_COL = 4
 OF_ENTRY_ROW = 4
 OF_ENTRY_COL = 5
-PICTURE_CHECK_BUTTON_ROW = 4
-PICTURE_CHECK_BUTTON_COL = 6
+PICTURE_CHECK_BUTTON_ROW = 5
+PICTURE_CHECK_BUTTON_COL = 1
+PHOTOES_CHECK_BUTTON_ROW = 5
+PHOTOES_CHECK_BUTTON_COL = 4
 
 PRODUCTS_TYPE_LABEL_ROW = 6
 PRODUCTS_TYPE_LABEL_COL = 1
 PRODUCTS_TYPE_LIST_BOX_ROW = 6
 PRODUCTS_TYPE_LIST_BOX_COL = 2
+
+NUMBER_OF_PARTS_LIST_BOX_ROW = 6
+NUMBER_OF_PARTS_LIST_BOX_COL = 5
 
 FITTINGS_CHECK_BUTTON_ROW = 6
 FITTINGS_CHECK_BUTTON_COL = 5
@@ -65,17 +70,17 @@ STRAPS_CHECK_BUTTON_COL = 5
 
 PARTS_IN_BLUE_BIN_ROW = 17
 PARTS_IN_BLUE_BIN_COL = 1
-NOTE_LABEL_ROW = 19
+NOTE_LABEL_ROW = 25
 NOTE_LABEL_COL = 2
-NOTE_ENTRY_ROW = 19
+NOTE_ENTRY_ROW = 25
 NOTE_ENTRY_COL = 3
 
-OUTPUT_PAD_ROW = 21
+OUTPUT_PAD_ROW = 28
 OUTPUT_PAD_COL = 2
 
-CANCEL_BUTTON_ROW = 21
-CANCEL_BUTTON_COL = 2
-SAVE_BUTTON_ROW = 21
+CANCEL_BUTTON_ROW = 28
+CANCEL_BUTTON_COL = 1
+SAVE_BUTTON_ROW = 28
 SAVE_BUTTON_COL = 6
 
 #SJ0130222 - Ideally the products type list should be stored in a database; the setback of reading from a database
@@ -83,22 +88,14 @@ SAVE_BUTTON_COL = 6
 productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heater Core', 'Radiator Core',
 'DPF', 'DPF-DOC Combo', 'EGR', 'Coolant Pipe', 'Oil Cooler', 'AC Hose', 'Cooling Module', 'Other']
 
-FITTINGS = 0
-HOSES = 1
-SENSORS = 2
-BRACKETS = 3
-MOUNTS = 4
-RAD_CAP = 5
-SHROUD = 6
-FAN = 7
-CHAIN = 8
-STRAPS = 9
-TOTAL_NUMBER_OF_PARTS = 10
+numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'FAN', 'Chain', 'Straps']
+#TOTAL_NUMBER_OF_PARTS = 10
 
-numberOfParts = [0] * TOTAL_NUMBER_OF_PARTS
+#numberOfParts = [0] * TOTAL_NUMBER_OF_PARTS
 
 customerName = ''
-productsTypelistbox = []
+productsTypeListbox = []
+numberOfPartsListbox = []
 outputPad = ''
 
 class WER_Main:
@@ -143,19 +140,32 @@ class WER_Main:
         self.pictureCheckButton = Checkbutton(master, text='Pictures', var=pictureStatus)
         self.pictureCheckButton.grid(row=PICTURE_CHECK_BUTTON_ROW, column=PICTURE_CHECK_BUTTON_COL)
 
+        #SJ6190222 - Photoes uploaded
+        photoesStatus = IntVar()
+        self.photoesCheckButton = Checkbutton(master, text='Photoes Uploaded?', var=photoesStatus)
+        self.photoesCheckButton.grid(row=PHOTOES_CHECK_BUTTON_ROW, column=PHOTOES_CHECK_BUTTON_COL)
+
         #SJ0130222 - Input field for product types
         self.productsTypeLabel = Label(master, text='Received items: ').grid(row=PRODUCTS_TYPE_LABEL_ROW, column=PRODUCTS_TYPE_LABEL_COL)
-        #self.productsTypelistbox = Listbox(master, selectmode=MULTIPLE)
+        #self.productsTypeListbox = Listbox(master, selectmode=MULTIPLE)
         #for productItem in productsType:
-        #    self.productsTypelistbox.insert(END, productItem)
-        #self.productsTypelistbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
-        global productsTypelistbox
-        productsTypelistbox = Listbox(master, selectmode=MULTIPLE)
+        #    self.productsTypeListbox.insert(END, productItem)
+        #self.productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+        global productsTypeListbox
+        productsTypeListbox = Listbox(master, selectmode=MULTIPLE)
         for productItem in productsType:
-            productsTypelistbox.insert(END, productItem)
-        productsTypelistbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+            productsTypeListbox.insert(END, productItem)
+        productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+
+        global numberOfPartsListbox
+        numberOfPartsListbox = Listbox(master, selectmode=MULTIPLE)
+        for productItem in numberOfParts:
+            numberOfPartsListbox.insert(END, productItem)
+        numberOfPartsListbox.grid(row=NUMBER_OF_PARTS_LIST_BOX_ROW, column=NUMBER_OF_PARTS_LIST_BOX_COL)
+
 
         #SJ1140222 - Check button fields for number of parts
+        """
         numberOfPartsFrame = Frame()
         numberOfParts[FITTINGS] = IntVar()
         self.fittingsCheckButton = Checkbutton(numberOfPartsFrame, text='Fittings ', var=numberOfParts[FITTINGS])
@@ -197,7 +207,7 @@ class WER_Main:
         self.strapsCheckButton = Checkbutton(numberOfPartsFrame, text='Straps ', var=numberOfParts[STRAPS])
         self.strapsCheckButton.grid(row=STRAPS_CHECK_BUTTON_ROW, column=STRAPS_CHECK_BUTTON_COL)
         numberOfPartsFrame.grid(row=FITTINGS_CHECK_BUTTON_ROW, column=FITTINGS_CHECK_BUTTON_COL)
-
+        """
         #SJ3160222 - Check box field for parts in blue bin
         partsInBlueBin = IntVar()
         self.partsInBlueBinCheckButton = Checkbutton(master, text='Are parts in a Blue Bin? ', var=partsInBlueBin)
@@ -233,8 +243,12 @@ class WER_Main:
         self.custo = customerName.get()
         self.productsTypeList = productsTypelistbox.curselection()
         outputPad.insert(0, self.productsTypeList)
-        #print('customerEntry is: ', customerEntry.get())
+        print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
         #self.label.configure(text='Button clicked')
+
+        #a = [4, 3, 2, 1, 10, 14, -14]
+        #print(list(map(str, a)))
+
 
 
 root = Tk()
