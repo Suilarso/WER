@@ -132,11 +132,13 @@ class WER_Main:
         #SJ6120222 - Input field for pieces
         self.piecesLabel = Label(master, text='Piece(s): ').grid(row=PIECES_LABEL_ROW, column=PIECES_LABEL_COL)
         numOfPieces = Entry(master)
+        numOfPieces.insert(0, '1')
         numOfPieces.grid(row=PIECES_ENTRY_ROW, column=PIECES_ENTRY_COL)
 
         #SJ6120222 - Input field for of
         self.ofLabel = Label(master, text='of: ').grid(row=OF_LABEL_ROW, column=OF_LABEL_COL)
         ofPieces = Entry(master)
+        ofPieces.insert(0, '1')
         ofPieces.grid(row=OF_ENTRY_ROW, column=OF_ENTRY_COL)
 
         #SJ6120222 - Input field for pictures
@@ -169,7 +171,7 @@ class WER_Main:
 
         #SJ3160222 - Text field for notes
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
-        notes = Text(master, font=('Verdana', 16), height=6, width=20)
+        notes = Text(master, font=('Verdana', 10), height=6, width=20)
         notes.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
 
         outputPad = Entry(master)
@@ -183,20 +185,55 @@ class WER_Main:
         #self.label.grid(row=0, column=0)
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
 
+    def initializeInputFields(self, master):
+        self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
+        self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
+        customerName.delete(0, END)
+        workOrder.delete(0, END)
+        #dateReceived
+        receivedBy.delete(0, END)
+        numOfPieces.delete(0, END)
+        numOfPieces.insert(0, '1')
+        ofPieces.delete(0, END)
+        ofPieces.insert(0, '1')
+        pictureStatus.set(0)
+        photoesStatus.set(0)
+        for c in self.productsTypeList: productsTypeListbox.select_clear(int(c))
+        for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
+        #numberOfPartsListbox.select_clear()
+        partsInBlueBin.set(0)
+        notes.delete(1.0, END)
+
     def cancelCallback(self, master):
         #global outputPad
-        global customerName
+        #global customerName
+        self.initializeInputFields(master)
 
     def saveCallback(self, master):
-        global outputPad
-        global productsTypeListbox
-        global numberOfPartsListbox
-        self.productsTypeList = productsTypeListbox.curselection()
-        self.numberOfPartsList = numberOfPartsListbox.curselection()
-        outputPad.insert(0, self.productsTypeList+self.numberOfPartsList)
-        print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
-        print('product type list: ', ''.join(list(map(str, self.numberOfPartsList))))
-        #self.label.configure(text='Button clicked')
+        self.customerName = customerName.get()
+        self.workOrder = workOrder.get()
+        self.dateReceived = dateReceived.get_date()
+        self.receivedBy = receivedBy.get()
+        self.numOfPieces = eval(numOfPieces.get())
+        self.ofPieces = eval(ofPieces.get())
+        self.pictureStatus = pictureStatus.get()
+        self.photoesStatus = photoesStatus.get()
+        self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
+        self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
+        self.partsInBlueBin = partsInBlueBin.get()
+        self.notes = notes.get(1.0, END)
+
+        print('Customer & WOP: ', self.customerName, self.workOrder)
+        print('Date & Received by: ', self.dateReceived, self.receivedBy)
+        print('Num of pieces & of pieces: ', self.numOfPieces, self.ofPieces)
+        print('Pictures & photoes uploaded: ', self.pictureStatus, self.photoesStatus)
+        print('Products type & Num of parts: ', self.productsTypeList, self.numberOfPartsList)
+        print('Parts in blue bin: ', self.partsInBlueBin)
+        print('Notes: ', self.notes)
+
+        #outputPad.insert(0, self.productsTypeList+self.numberOfPartsList)
+        #print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
+        #print('product type list: ', ''.join(list(map(str, self.numberOfPartsList))))
 
 
 root = Tk()
