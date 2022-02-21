@@ -94,46 +94,66 @@ numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap',
 #numberOfParts = [0] * TOTAL_NUMBER_OF_PARTS
 
 customerName = ''
+workOrder = ''
+dateReceived = ''
+receivedBy = ''
+numOfPieces = 0
+ofPieces = 0
+pictureStatus = 0
+photoesStatus = 0
 productsTypeListbox = []
 numberOfPartsListbox = []
+partsInBlueBin = 0
+notes = ''
 outputPad = ''
 
 class WER_Main:
     def __init__(self, master):
         master.title('West End Radiators')
 
-        #SJ5110222 - Input field for customer name
         global customerName
+        global workOrder
+        global dateReceived
+        global receivedBy
+        global numOfPieces
+        global ofPieces
+        global pictureStatus
+        global photoesStatus
+        global productsTypeListbox
+        global numberOfPartsListbox
+        global partsInBlueBin
+        global notes
+        global outputPad
+
+        #SJ5110222 - Input field for customer name
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
-        #self.customerEntry = Entry(master)
-        #self.customerEntry.grid(row=CUSTOMER_ENTRY_ROW, column=CUSTOMER_ENTRY_COL)
         customerName = Entry(master)
         customerName.grid(row=CUSTOMER_ENTRY_ROW, column=CUSTOMER_ENTRY_COL)
 
         #SJ5110222 - Input field for work order
         self.workOrderLabel = Label(master, text='WO: ').grid(row=WORK_ORDER_LABEL_ROW, column=WORK_ORDER_LABEL_COL)
-        self.workOrderEntry = Entry(master)
-        self.workOrderEntry.grid(row=WORK_ORDER_ENTRY_ROW, column=WORK_ORDER_ENTRY_COL)
+        workOrder = Entry(master)
+        workOrder.grid(row=WORK_ORDER_ENTRY_ROW, column=WORK_ORDER_ENTRY_COL)
 
         #SJ6120222 - Input field for Date received
         self.dateReceivedLabel = Label(master, text='Date Received: ').grid(row=DATE_RECEIVED_LABEL_ROW, column=DATE_RECEIVED_LABEL_COL)
-        self.dateReceivedEntry = DateEntry(master, values="Text", year=2022, state="readonly", date_pattern="yyyy-mm-dd")
-        self.dateReceivedEntry.grid(row=DATE_RECEIVED_ENTRY_ROW, column=DATE_RECEIVED_ENTRY_COL, padx=20, pady=5, sticky=W)
+        dateReceived = DateEntry(master, values="Text", year=2022, state="readonly", date_pattern="yyyy-mm-dd")
+        dateReceived.grid(row=DATE_RECEIVED_ENTRY_ROW, column=DATE_RECEIVED_ENTRY_COL, padx=20, pady=5, sticky=W)
 
         #SJ6120222 - Input field for Received by
         self.receivedByLabel = Label(master, text='Received by: ').grid(row=RECEIVED_BY_LABEL_ROW, column=RECEIVED_BY_LABEL_COL)
-        self.receivedByEntry = Entry(master)
-        self.receivedByEntry.grid(row=RECEIVED_BY_ENTRY_ROW, column=RECEIVED_BY_ENTRY_COL)
+        receivedBy = Entry(master)
+        receivedBy.grid(row=RECEIVED_BY_ENTRY_ROW, column=RECEIVED_BY_ENTRY_COL)
 
         #SJ6120222 - Input field for pieces
         self.piecesLabel = Label(master, text='Piece(s): ').grid(row=PIECES_LABEL_ROW, column=PIECES_LABEL_COL)
-        self.piecesEntry = Entry(master)
-        self.piecesEntry.grid(row=PIECES_ENTRY_ROW, column=PIECES_ENTRY_COL)
+        numOfPieces = Entry(master)
+        numOfPieces.grid(row=PIECES_ENTRY_ROW, column=PIECES_ENTRY_COL)
 
         #SJ6120222 - Input field for of
         self.ofLabel = Label(master, text='of: ').grid(row=OF_LABEL_ROW, column=OF_LABEL_COL)
-        self.ofEntry = Entry(master)
-        self.ofEntry.grid(row=OF_ENTRY_ROW, column=OF_ENTRY_COL)
+        ofPieces = Entry(master)
+        ofPieces.grid(row=OF_ENTRY_ROW, column=OF_ENTRY_COL)
 
         #SJ6120222 - Input field for pictures
         pictureStatus = IntVar()
@@ -147,67 +167,17 @@ class WER_Main:
 
         #SJ0130222 - Input field for product types
         self.productsTypeLabel = Label(master, text='Received items: ').grid(row=PRODUCTS_TYPE_LABEL_ROW, column=PRODUCTS_TYPE_LABEL_COL)
-        #self.productsTypeListbox = Listbox(master, selectmode=MULTIPLE)
-        #for productItem in productsType:
-        #    self.productsTypeListbox.insert(END, productItem)
-        #self.productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
-        global productsTypeListbox
-        productsTypeListbox = Listbox(master, selectmode=MULTIPLE)
+        productsTypeListbox = Listbox(master, selectmode=MULTIPLE, exportselection=0)
         for productItem in productsType:
             productsTypeListbox.insert(END, productItem)
         productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
 
-        global numberOfPartsListbox
-        numberOfPartsListbox = Listbox(master, selectmode=MULTIPLE)
-        for productItem in numberOfParts:
-            numberOfPartsListbox.insert(END, productItem)
+        #SJ1140222 - Listbox fields for number of parts
+        numberOfPartsListbox = Listbox(master, selectmode=MULTIPLE, exportselection=0)
+        for partItem in numberOfParts:
+            numberOfPartsListbox.insert(END, partItem)
         numberOfPartsListbox.grid(row=NUMBER_OF_PARTS_LIST_BOX_ROW, column=NUMBER_OF_PARTS_LIST_BOX_COL)
 
-
-        #SJ1140222 - Check button fields for number of parts
-        """
-        numberOfPartsFrame = Frame()
-        numberOfParts[FITTINGS] = IntVar()
-        self.fittingsCheckButton = Checkbutton(numberOfPartsFrame, text='Fittings ', var=numberOfParts[FITTINGS])
-        self.fittingsCheckButton.grid(row=FITTINGS_CHECK_BUTTON_ROW, column=FITTINGS_CHECK_BUTTON_COL)
-
-        numberOfParts[HOSES] = IntVar()
-        self.hosesCheckButton = Checkbutton(numberOfPartsFrame, text='Hoses ', var=numberOfParts[HOSES])
-        self.hosesCheckButton.grid(row=HOSES_CHECK_BUTTON_ROW, column=HOSES_CHECK_BUTTON_COL)
-
-        numberOfParts[SENSORS] = IntVar()
-        self.sensorsCheckButton = Checkbutton(numberOfPartsFrame, text='Sensors ', var=numberOfParts[SENSORS])
-        self.sensorsCheckButton.grid(row=SENSORS_CHECK_BUTTON_ROW, column=SENSORS_CHECK_BUTTON_COL)
-
-        numberOfParts[BRACKETS] = IntVar()
-        self.bracketsCheckButton = Checkbutton(numberOfPartsFrame, text='Brackets ', var=numberOfParts[BRACKETS])
-        self.bracketsCheckButton.grid(row=BRACKETS_CHECK_BUTTON_ROW, column=BRACKETS_CHECK_BUTTON_COL)
-
-        numberOfParts[MOUNTS] = IntVar()
-        self.mountCheckButton = Checkbutton(numberOfPartsFrame, text='Mount ', var=numberOfParts[MOUNTS])
-        self.mountCheckButton.grid(row=MOUNTS_CHECK_BUTTON_ROW, column=MOUNTS_CHECK_BUTTON_COL)
-
-        numberOfParts[RAD_CAP] = IntVar()
-        self.radCapCheckButton = Checkbutton(numberOfPartsFrame, text='Rad Cap ', var=numberOfParts[RAD_CAP])
-        self.radCapCheckButton.grid(row=RAD_CAP_CHECK_BUTTON_ROW, column=RAD_CAP_CHECK_BUTTON_COL)
-
-        numberOfParts[SHROUD] = IntVar()
-        self.shroudCheckButton = Checkbutton(numberOfPartsFrame, text='Shroud ', var=numberOfParts[SHROUD])
-        self.shroudCheckButton.grid(row=SHROUD_CHECK_BUTTON_ROW, column=SHROUD_CHECK_BUTTON_COL)
-
-        numberOfParts[FAN] = IntVar()
-        self.fanCheckButton = Checkbutton(numberOfPartsFrame, text='Fan ', var=numberOfParts[FAN])
-        self.fanCheckButton.grid(row=FAN_CHECK_BUTTON_ROW, column=FAN_CHECK_BUTTON_COL)
-
-        numberOfParts[CHAIN] = IntVar()
-        self.chainCheckButton = Checkbutton(numberOfPartsFrame, text='Chain ', var=numberOfParts[CHAIN])
-        self.chainCheckButton.grid(row=CHAIN_CHECK_BUTTON_ROW, column=CHAIN_CHECK_BUTTON_COL)
-
-        numberOfParts[STRAPS] = IntVar()
-        self.strapsCheckButton = Checkbutton(numberOfPartsFrame, text='Straps ', var=numberOfParts[STRAPS])
-        self.strapsCheckButton.grid(row=STRAPS_CHECK_BUTTON_ROW, column=STRAPS_CHECK_BUTTON_COL)
-        numberOfPartsFrame.grid(row=FITTINGS_CHECK_BUTTON_ROW, column=FITTINGS_CHECK_BUTTON_COL)
-        """
         #SJ3160222 - Check box field for parts in blue bin
         partsInBlueBin = IntVar()
         self.partsInBlueBinCheckButton = Checkbutton(master, text='Are parts in a Blue Bin? ', var=partsInBlueBin)
@@ -215,10 +185,9 @@ class WER_Main:
 
         #SJ3160222 - Text field for notes
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
-        self.notesTextbox = Text(master, font=('Verdana', 16), height=6, width=20)
-        self.notesTextbox.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
+        notes = Text(master, font=('Verdana', 16), height=6, width=20)
+        notes.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
 
-        global outputPad
         outputPad = Entry(master)
         outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
 
@@ -237,13 +206,14 @@ class WER_Main:
         #outputPad.insert(0, self.custo)
 
     def saveCallback(self, master):
-        #global outputPad
-        global customerName
-        global productsTypelistbox
-        self.custo = customerName.get()
-        self.productsTypeList = productsTypelistbox.curselection()
-        outputPad.insert(0, self.productsTypeList)
+        global outputPad
+        global productsTypeListbox
+        global numberOfPartsListbox
+        self.productsTypeList = productsTypeListbox.curselection()
+        self.numberOfPartsList = numberOfPartsListbox.curselection()
+        outputPad.insert(0, self.productsTypeList+self.numberOfPartsList)
         print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
+        print('product type list: ', ''.join(list(map(str, self.numberOfPartsList))))
         #self.label.configure(text='Button clicked')
 
         #a = [4, 3, 2, 1, 10, 14, -14]
