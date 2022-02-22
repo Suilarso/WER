@@ -3,7 +3,9 @@
 #Remark: This page consist of user interface for user input. It uses tkinter GUI
 
 from tkinter import *
+from tkinter.messagebox import *
 from tkcalendar import DateEntry
+import sqlite3
 
 #SJ0130222 - Global variables declaration
 
@@ -112,6 +114,7 @@ class WER_Main:
         #SJ5110222 - Input field for customer name
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
         customerName = Entry(master)
+        customerName.focus_set()  #SJ1210222 - Put this field into focus
         customerName.grid(row=CUSTOMER_ENTRY_ROW, column=CUSTOMER_ENTRY_COL)
 
         #SJ5110222 - Input field for work order
@@ -159,6 +162,7 @@ class WER_Main:
         productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
 
         #SJ1140222 - Listbox fields for number of parts
+        self.numOfPartsLabel = Label(master, text='# of parts: ').grid(row=NUMBER_OF_PARTS_LABEL_ROW, column=NUMBER_OF_PARTS_LABEL_COL)
         numberOfPartsListbox = Listbox(master, selectmode=MULTIPLE, exportselection=0)
         for partItem in numberOfParts:
             numberOfPartsListbox.insert(END, partItem)
@@ -189,6 +193,7 @@ class WER_Main:
         self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
         self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
         customerName.delete(0, END)
+        customerName.focus_set()  #SJ1210222 - Put this field into focus
         workOrder.delete(0, END)
         #dateReceived
         receivedBy.delete(0, END)
@@ -212,24 +217,37 @@ class WER_Main:
     def saveCallback(self, master):
         self.customerName = customerName.get()
         self.workOrder = workOrder.get()
-        self.dateReceived = dateReceived.get_date()
-        self.receivedBy = receivedBy.get()
-        self.numOfPieces = eval(numOfPieces.get())
-        self.ofPieces = eval(ofPieces.get())
-        self.pictureStatus = pictureStatus.get()
-        self.photoesStatus = photoesStatus.get()
-        self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
-        self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
-        self.partsInBlueBin = partsInBlueBin.get()
-        self.notes = notes.get(1.0, END)
+        if len(self.customerName) == 0 or len(self.workOrder) == 0:
+            #print("Compulsory input field can't be empty")
+            showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
+        else:
+            self.dateReceived = dateReceived.get_date()
+            self.receivedBy = receivedBy.get()
+            self.numOfPieces = eval(numOfPieces.get())
+            self.ofPieces = eval(ofPieces.get())
+            self.pictureStatus = pictureStatus.get()
+            self.photoesStatus = photoesStatus.get()
+            self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
+            self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
+            self.partsInBlueBin = partsInBlueBin.get()
+            self.notes = notes.get(1.0, END)
 
-        print('Customer & WOP: ', self.customerName, self.workOrder)
-        print('Date & Received by: ', self.dateReceived, self.receivedBy)
-        print('Num of pieces & of pieces: ', self.numOfPieces, self.ofPieces)
-        print('Pictures & photoes uploaded: ', self.pictureStatus, self.photoesStatus)
-        print('Products type & Num of parts: ', self.productsTypeList, self.numberOfPartsList)
-        print('Parts in blue bin: ', self.partsInBlueBin)
-        print('Notes: ', self.notes)
+            self.initializeInputFields(master)
+
+            print('Customer & WOP: ', self.customerName, self.workOrder)
+            print('Date & Received by: ', self.dateReceived, self.receivedBy)
+            print('Num of pieces & of pieces: ', self.numOfPieces, self.ofPieces)
+            print('Pictures & photoes uploaded: ', self.pictureStatus, self.photoesStatus)
+            print('Products type & Num of parts: ', self.productsTypeList, self.numberOfPartsList)
+            print('Parts in blue bin: ', self.partsInBlueBin)
+            print('Notes: ', self.notes)
+
+
+        #conn = sqlite3.connect('spider.sqlite')
+        #cur = conn.cursor()
+        #cur.execute('''
+        #CREATE TABLE IF NOT EXISTS Twitter
+        #(name TEXT, retrieved INTEGER, friends INTEGER)''')
 
         #outputPad.insert(0, self.productsTypeList+self.numberOfPartsList)
         #print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
