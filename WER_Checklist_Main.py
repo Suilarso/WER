@@ -47,16 +47,20 @@ PRODUCTS_TYPE_LABEL_ROW = PHOTOES_CHECK_BUTTON_ROW + 2       #row 9
 PRODUCTS_TYPE_LABEL_COL = 1                                  #col 1
 PRODUCTS_TYPE_LIST_BOX_ROW = PRODUCTS_TYPE_LABEL_ROW         #row 9
 PRODUCTS_TYPE_LIST_BOX_COL = PRODUCTS_TYPE_LABEL_COL + 1     #col 2
-NUMBER_OF_PARTS_LABEL_ROW = PRODUCTS_TYPE_LABEL_ROW          #row 9 - NEW
-NUMBER_OF_PARTS_LABEL_COL = PRODUCTS_TYPE_LIST_BOX_COL + 2   #col 4 - NEW
+NUMBER_OF_PARTS_LABEL_ROW = PRODUCTS_TYPE_LABEL_ROW          #row 9
+NUMBER_OF_PARTS_LABEL_COL = PRODUCTS_TYPE_LIST_BOX_COL + 2   #col 4
 NUMBER_OF_PARTS_LIST_BOX_ROW = PRODUCTS_TYPE_LABEL_ROW       #row 9
 NUMBER_OF_PARTS_LIST_BOX_COL = NUMBER_OF_PARTS_LABEL_COL + 1 #col 5
 #SJ1210222 - row 19 not used
 PARTS_IN_BLUE_BIN_ROW = NUMBER_OF_PARTS_LIST_BOX_ROW + 11 #row 20
-PARTS_IN_BLUE_BIN_COL = 1
+PARTS_IN_BLUE_BIN_COL = 1                                 #col 1
+QC_CHECKED_BY_LABEL_ROW = PARTS_IN_BLUE_BIN_ROW             #row 20
+QC_CHECKED_BY_LABEL_COL = PARTS_IN_BLUE_BIN_COL + 3         #col 4
+QC_CHECKED_BY_ENTRY_ROW = PARTS_IN_BLUE_BIN_ROW             #row 20
+QC_CHECKED_BY_ENTRY_COL = QC_CHECKED_BY_LABEL_COL + 1         #col 5
 #SJ1210222 - row 21 not used
-NOTE_LABEL_ROW = PARTS_IN_BLUE_BIN_ROW + 2 #row 22
-NOTE_LABEL_COL = 2                         #col 2
+NOTE_LABEL_ROW = QC_CHECKED_BY_ENTRY_ROW + 2 #row 22
+NOTE_LABEL_COL = 1                         #col 2
 NOTE_ENTRY_ROW = NOTE_LABEL_ROW            #row 22
 NOTE_ENTRY_COL = NOTE_LABEL_COL + 1        #col 3
 #SJ1210222 - row 23 not used
@@ -88,6 +92,7 @@ photoesStatus = 0
 productsTypeListbox = []
 numberOfPartsListbox = []
 partsInBlueBin = 0
+qcCheckedBy = ''
 notes = ''
 outputPad = ''
 
@@ -95,6 +100,7 @@ class WER_Main:
     def __init__(self, master):
         master.title('West End Radiators')
         self.setupDataEntryScreen(master)
+        self.setupSQLiteDBase('./dbase/werShipping.sqlite')
 
     def setupDataEntryScreen(self, master):
         global customerName
@@ -108,6 +114,7 @@ class WER_Main:
         global productsTypeListbox
         global numberOfPartsListbox
         global partsInBlueBin
+        global qcCheckedBy
         global notes
         global outputPad
 
@@ -172,6 +179,12 @@ class WER_Main:
         partsInBlueBin = IntVar()
         self.partsInBlueBinCheckButton = Checkbutton(master, text='Are parts in a Blue Bin? ', var=partsInBlueBin)
         self.partsInBlueBinCheckButton.grid(row=PARTS_IN_BLUE_BIN_ROW, column=PARTS_IN_BLUE_BIN_COL)
+
+        #SJ2220222 - Input field for QC Checked by
+        self.qcCheckedByLabel = Label(master, text='QC Checked By: ').grid(row=QC_CHECKED_BY_LABEL_ROW, column=QC_CHECKED_BY_LABEL_COL)
+        qcCheckedBy = Entry(master, state=DISABLED)  #SJ2220222 - Field will be enabled only in edit mode
+        qcCheckedBy.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
+        #qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
 
         #SJ3160222 - Text field for notes
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
@@ -242,9 +255,10 @@ class WER_Main:
             print('Parts in blue bin: ', self.partsInBlueBin)
             print('Notes: ', self.notes)
 
-
-        #conn = sqlite3.connect('spider.sqlite')
-        #cur = conn.cursor()
+    #SJ2220222 - Setup connection to wershipping database
+    def setupSQLiteDBase(self, dbName):
+        conn = sqlite3.connect(dbName)
+        cur = conn.cursor()
         #cur.execute('''
         #CREATE TABLE IF NOT EXISTS Twitter
         #(name TEXT, retrieved INTEGER, friends INTEGER)''')
