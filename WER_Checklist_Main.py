@@ -96,6 +96,11 @@ qcCheckedBy = ''
 notes = ''
 outputPad = ''
 
+#SJ3230222 - database and table global variables
+conn = ''
+curCursor = ''
+tableName = 'werChecklist'
+
 class WER_Main:
     def __init__(self, master):
         master.title('West End Radiators')
@@ -228,6 +233,9 @@ class WER_Main:
         self.initializeInputFields(master)
 
     def saveCallback(self, master):
+        global tableName
+        global conn
+        global curCursor
         self.customerName = customerName.get()
         self.workOrder = workOrder.get()
         if len(self.customerName) == 0 or len(self.workOrder) == 0:
@@ -235,30 +243,43 @@ class WER_Main:
             showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
         else:
             self.dateReceived = dateReceived.get_date()
-            self.receivedBy = receivedBy.get()
-            self.numOfPieces = eval(numOfPieces.get())
-            self.ofPieces = eval(ofPieces.get())
-            self.pictureStatus = pictureStatus.get()
-            self.photoesStatus = photoesStatus.get()
-            self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
-            self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
-            self.partsInBlueBin = partsInBlueBin.get()
-            self.notes = notes.get(1.0, END)
+            #self.receivedBy = receivedBy.get()
+            #self.numOfPieces = eval(numOfPieces.get())
+            #self.ofPieces = eval(ofPieces.get())
+            #self.pictureStatus = pictureStatus.get()
+            #self.photoesStatus = photoesStatus.get()
+            #self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
+            #self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
+            #self.partsInBlueBin = partsInBlueBin.get()
+            #self.notes = notes.get(1.0, END)
+
+            curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
+                           ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
+                           notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, self.dateReceived, receivedBy.get(), eval(numOfPieces.get()),
+                           eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(), ''.join(list(map(str, productsTypeListbox.curselection()))),
+                           ''.join(list(map(str, numberOfPartsListbox.curselection()))), partsInBlueBin.get(), notes.get(1.0, END)))
+
+            conn.commit()
 
             self.initializeInputFields(master)
 
-            print('Customer & WOP: ', self.customerName, self.workOrder)
-            print('Date & Received by: ', self.dateReceived, self.receivedBy)
-            print('Num of pieces & of pieces: ', self.numOfPieces, self.ofPieces)
-            print('Pictures & photoes uploaded: ', self.pictureStatus, self.photoesStatus)
-            print('Products type & Num of parts: ', self.productsTypeList, self.numberOfPartsList)
-            print('Parts in blue bin: ', self.partsInBlueBin)
-            print('Notes: ', self.notes)
+            #print('Customer & WOP: ', self.customerName, self.workOrder)
+            #print('Date & Received by: ', self.dateReceived, self.receivedBy)
+            #print('Num of pieces & of pieces: ', self.numOfPieces, self.ofPieces)
+            #print('Pictures & photoes uploaded: ', self.pictureStatus, self.photoesStatus)
+            #print('Products type & Num of parts: ', self.productsTypeList, self.numberOfPartsList)
+            #print('Parts in blue bin: ', self.partsInBlueBin)
+            #print('Notes: ', self.notes)
 
     #SJ2220222 - Setup connection to wershipping database
     def setupSQLiteDBase(self, dbName):
-        conn = sqlite3.connect(dbName)
-        cur = conn.cursor()
+        global conn
+        global curCursor
+        try:
+            conn = sqlite3.connect(dbName)
+            curCursor = conn.cursor()
+        except:
+            print('Fail to connect to database')
         #cur.execute('''
         #CREATE TABLE IF NOT EXISTS Twitter
         #(name TEXT, retrieved INTEGER, friends INTEGER)''')
