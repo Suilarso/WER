@@ -239,10 +239,9 @@ class WER_Main:
         self.customerName = customerName.get()
         self.workOrder = workOrder.get()
         if len(self.customerName) == 0 or len(self.workOrder) == 0:
-            #print("Compulsory input field can't be empty")
             showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
         else:
-            self.dateReceived = dateReceived.get_date()
+            #self.dateReceived = dateReceived.get_date()
             #self.receivedBy = receivedBy.get()
             #self.numOfPieces = eval(numOfPieces.get())
             #self.ofPieces = eval(ofPieces.get())
@@ -253,23 +252,24 @@ class WER_Main:
             #self.partsInBlueBin = partsInBlueBin.get()
             #self.notes = notes.get(1.0, END)
 
-            curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
-                           ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
-                           notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, self.dateReceived, receivedBy.get(), eval(numOfPieces.get()),
-                           eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(), ''.join(list(map(str, productsTypeListbox.curselection()))),
-                           ''.join(list(map(str, numberOfPartsListbox.curselection()))), partsInBlueBin.get(), notes.get(1.0, END)))
+            curCursor.execute('SELECT workOrder FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
+            try:
+                count = curCursor.fetchone()[0]
+                print('fetchone: ', count)
+                showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
+            except:
+                curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
+                               ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
+                               notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
+                               receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
+                               ''.join(list(map(str, productsTypeListbox.curselection()))), ''.join(list(map(str, numberOfPartsListbox.curselection()))),
+                               partsInBlueBin.get(), notes.get(1.0, END)))
 
-            conn.commit()
+                conn.commit()
+                #SJ4240222 - Figure out where to place the conn.close() sttmt
+                #conn.close()
 
             self.initializeInputFields(master)
-
-            #print('Customer & WOP: ', self.customerName, self.workOrder)
-            #print('Date & Received by: ', self.dateReceived, self.receivedBy)
-            #print('Num of pieces & of pieces: ', self.numOfPieces, self.ofPieces)
-            #print('Pictures & photoes uploaded: ', self.pictureStatus, self.photoesStatus)
-            #print('Products type & Num of parts: ', self.productsTypeList, self.numberOfPartsList)
-            #print('Parts in blue bin: ', self.partsInBlueBin)
-            #print('Notes: ', self.notes)
 
     #SJ2220222 - Setup connection to wershipping database
     def setupSQLiteDBase(self, dbName):
