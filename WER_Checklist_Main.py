@@ -5,6 +5,7 @@
 from tkinter import *
 from tkinter.messagebox import *
 from tkcalendar import DateEntry
+from datetime import datetime
 import sqlite3
 
 #SJ0130222 - Global variables declaration
@@ -79,7 +80,7 @@ OUTPUT_PAD_COL = 2
 productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heater Core', 'Radiator Core',
 'DPF', 'DPF-DOC Combo', 'EGR', 'Coolant Pipe', 'Oil Cooler', 'AC Hose', 'Cooling Module', 'Other']
 
-numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'FAN', 'Chain', 'Straps']
+numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'Fan', 'Chain', 'Straps']
 
 customerName = ''
 workOrder = ''
@@ -94,7 +95,7 @@ numberOfPartsListbox = []
 partsInBlueBin = 0
 qcCheckedBy = ''
 notes = ''
-outputPad = ''
+#outputPad = ''
 
 #SJ3230222 - database and table global variables
 conn = ''
@@ -121,7 +122,7 @@ class WER_Main:
         global partsInBlueBin
         global qcCheckedBy
         global notes
-        global outputPad
+        #global outputPad
 
         #SJ5110222 - Input field for customer name
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
@@ -135,8 +136,9 @@ class WER_Main:
         workOrder.grid(row=WORK_ORDER_ENTRY_ROW, column=WORK_ORDER_ENTRY_COL)
 
         #SJ6120222 - Input field for Date received
+        self.todayDate = datetime(1,1,1).now()  #SJ5250222 - Getting today system date
         self.dateReceivedLabel = Label(master, text='Date Received: ').grid(row=DATE_RECEIVED_LABEL_ROW, column=DATE_RECEIVED_LABEL_COL)
-        dateReceived = DateEntry(master, values="Text", year=2022, state="readonly", date_pattern="yyyy-mm-dd")
+        dateReceived = DateEntry(master, values="Text", year=self.todayDate.year, state="readonly", date_pattern="yyyy-mm-dd")
         dateReceived.grid(row=DATE_RECEIVED_ENTRY_ROW, column=DATE_RECEIVED_ENTRY_COL, padx=20, pady=5, sticky=W)
 
         #SJ6120222 - Input field for Received by
@@ -196,15 +198,13 @@ class WER_Main:
         notes = Text(master, font=('Verdana', 10), height=6, width=20)
         notes.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
 
-        outputPad = Entry(master)
-        outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
+        #outputPad = Entry(master)
+        #outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
 
         self.cancelButton = Button(text='Cancel', command=lambda x=master: self.cancelCallback(x))
-        #self.label.grid(row=0, column=0)
         self.cancelButton.grid(row=CANCEL_BUTTON_ROW, column=CANCEL_BUTTON_COL)
 
         self.saveButton = Button(text='Save', command=lambda x=master: self.saveCallback(x))
-        #self.label.grid(row=0, column=0)
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
 
     def initializeInputFields(self, master):
@@ -223,12 +223,10 @@ class WER_Main:
         photoesStatus.set(0)
         for c in self.productsTypeList: productsTypeListbox.select_clear(int(c))
         for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
-        #numberOfPartsListbox.select_clear()
         partsInBlueBin.set(0)
         notes.delete(1.0, END)
 
     def cancelCallback(self, master):
-        #global outputPad
         #global customerName
         self.initializeInputFields(master)
 
@@ -264,10 +262,7 @@ class WER_Main:
                                receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
                                ''.join(list(map(str, productsTypeListbox.curselection()))), ''.join(list(map(str, numberOfPartsListbox.curselection()))),
                                partsInBlueBin.get(), notes.get(1.0, END)))
-
                 conn.commit()
-                #SJ4240222 - Figure out where to place the conn.close() sttmt
-                #conn.close()
 
             self.initializeInputFields(master)
 
@@ -275,20 +270,25 @@ class WER_Main:
     def setupSQLiteDBase(self, dbName):
         global conn
         global curCursor
+        global quitter_function
         try:
             conn = sqlite3.connect(dbName)
             curCursor = conn.cursor()
         except:
             print('Fail to connect to database')
-        #cur.execute('''
-        #CREATE TABLE IF NOT EXISTS Twitter
-        #(name TEXT, retrieved INTEGER, friends INTEGER)''')
+            quitter_function()
 
         #outputPad.insert(0, self.productsTypeList+self.numberOfPartsList)
         #print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
         #print('product type list: ', ''.join(list(map(str, self.numberOfPartsList))))
 
 
+def quitter_function():
+    #print('Good bye')
+    conn.close()  #SJ5250222 - Close database connection
+    root.destroy()
+
 root = Tk()
+root.protocol('WM_DELETE_WINDOW', quitter_function)
 app = WER_Main(root)
 mainloop()
