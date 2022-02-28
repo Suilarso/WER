@@ -19,8 +19,11 @@ WORK_ORDER_LABEL_ROW = CUSTOMER_LABEL_ROW        #row 1
 WORK_ORDER_LABEL_COL = CUSTOMER_ENTRY_COL + 2    #col 4
 WORK_ORDER_ENTRY_ROW = CUSTOMER_LABEL_ROW        #row 1
 WORK_ORDER_ENTRY_COL = WORK_ORDER_LABEL_COL + 1  #col 5
+#SJ6260222 - Search button
+SEARCH_BUTTON_ROW =  CUSTOMER_LABEL_ROW        #row 1
+SEARCH_BUTTON_COL = WORK_ORDER_ENTRY_COL + 1   #col 6
 #SJ1210222 - Row 2 not used
-DATE_RECEIVED_LABEL_ROW = WORK_ORDER_ENTRY_ROW + 2    #row 3
+DATE_RECEIVED_LABEL_ROW = SEARCH_BUTTON_ROW + 2     #row 3
 DATE_RECEIVED_LABEL_COL = 1                           #col 1
 DATE_RECEIVED_ENTRY_ROW = DATE_RECEIVED_LABEL_ROW     #row 3
 DATE_RECEIVED_ENTRY_COL = DATE_RECEIVED_LABEL_COL + 1 #col 2
@@ -55,15 +58,20 @@ NUMBER_OF_PARTS_LIST_BOX_COL = NUMBER_OF_PARTS_LABEL_COL + 1 #col 5
 #SJ1210222 - row 19 not used
 PARTS_IN_BLUE_BIN_ROW = NUMBER_OF_PARTS_LIST_BOX_ROW + 11 #row 20
 PARTS_IN_BLUE_BIN_COL = 1                                 #col 1
-QC_CHECKED_BY_LABEL_ROW = PARTS_IN_BLUE_BIN_ROW             #row 20
-QC_CHECKED_BY_LABEL_COL = PARTS_IN_BLUE_BIN_COL + 3         #col 4
-QC_CHECKED_BY_ENTRY_ROW = PARTS_IN_BLUE_BIN_ROW             #row 20
-QC_CHECKED_BY_ENTRY_COL = QC_CHECKED_BY_LABEL_COL + 1         #col 5
+QC_CHECKED_BY_LABEL_ROW = PARTS_IN_BLUE_BIN_ROW           #row 20
+QC_CHECKED_BY_LABEL_COL = PARTS_IN_BLUE_BIN_COL + 3       #col 4
+QC_CHECKED_BY_ENTRY_ROW = PARTS_IN_BLUE_BIN_ROW           #row 20
+QC_CHECKED_BY_ENTRY_COL = QC_CHECKED_BY_LABEL_COL + 1     #col 5
+#SJ6260222 - QC Check & Update Button
+QC_CHECK_BUTTON_ROW =  QC_CHECKED_BY_ENTRY_ROW    #row 5
+QC_CHECK_BUTTON_COL = QC_CHECKED_BY_ENTRY_COL + 1 #col 6
+UPDATE_BUTTON_ROW = QC_CHECKED_BY_ENTRY_ROW       #row 5
+UPDATE_BUTTON_COL = QC_CHECKED_BY_ENTRY_COL + 1   #col 6
 #SJ1210222 - row 21 not used
-NOTE_LABEL_ROW = QC_CHECKED_BY_ENTRY_ROW + 2 #row 22
-NOTE_LABEL_COL = 1                         #col 2
-NOTE_ENTRY_ROW = NOTE_LABEL_ROW            #row 22
-NOTE_ENTRY_COL = NOTE_LABEL_COL + 1        #col 3
+NOTE_LABEL_ROW = UPDATE_BUTTON_ROW + 2 #row 22
+NOTE_LABEL_COL = 1                     #col 2
+NOTE_ENTRY_ROW = NOTE_LABEL_ROW        #row 22
+NOTE_ENTRY_COL = NOTE_LABEL_COL + 1    #col 3
 #SJ1210222 - row 23 not used
 CANCEL_BUTTON_ROW = NOTE_ENTRY_ROW + 2  #row 24
 CANCEL_BUTTON_COL = 1                   #col 1
@@ -101,6 +109,9 @@ notes = ''
 conn = ''
 curCursor = ''
 tableName = 'werChecklist'
+werStructure = {'customerName': 0, 'workOrder': 1, 'dateReceived': 2, 'receivedBy': 3, 'numOfPieces': 4, 'ofPieces': 5,
+                'pictureStatus': 6, 'photoesStatus': 7, 'productsTypeListbox': 8, 'numberOfPartsListbox': 9,
+                'partsInBlueBin': 10, 'qcCheckedBy': 11,'notes': 12}
 
 class WER_Main:
     def __init__(self, master):
@@ -134,6 +145,10 @@ class WER_Main:
         self.workOrderLabel = Label(master, text='WO: ').grid(row=WORK_ORDER_LABEL_ROW, column=WORK_ORDER_LABEL_COL)
         workOrder = Entry(master)
         workOrder.grid(row=WORK_ORDER_ENTRY_ROW, column=WORK_ORDER_ENTRY_COL)
+
+        #SJ6260222 - QC Check button
+        self.searchButton = Button(text='Search', command=lambda x=master: self.searchCallback(x))
+        self.searchButton.grid(row=SEARCH_BUTTON_ROW, column=SEARCH_BUTTON_COL)
 
         #SJ6120222 - Input field for Date received
         self.todayDate = datetime(1,1,1).now()  #SJ5250222 - Getting today system date
@@ -193,6 +208,13 @@ class WER_Main:
         qcCheckedBy.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
         #qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
 
+        #SJ6260222 - QC Check and Update button
+        #SJ6260222 - QC Check button
+        self.qcCheckButton = Button(text='QC Check', state=DISABLED, command=lambda x=master: self.qcCheckCallback(x))
+        self.qcCheckButton.grid(row=QC_CHECK_BUTTON_ROW, column=QC_CHECK_BUTTON_COL)
+        #self.updateButton = Button(text='Update', state=DISABLED, command=lambda x=master: self.updateCallback(x))
+        #self.updateButton.grid(row=UPDATE_BUTTON_ROW, column=UPDATE_BUTTON_COL)
+
         #SJ3160222 - Text field for notes
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
         notes = Text(master, font=('Verdana', 10), height=6, width=20)
@@ -225,6 +247,63 @@ class WER_Main:
         for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
         partsInBlueBin.set(0)
         notes.delete(1.0, END)
+
+    #SJ0270222 - Search function to handle search button press
+    def searchCallback(self, master):
+        print('Inside searchCallback')
+        self.workOrder = workOrder.get()
+        if len(self.workOrder) == 0:
+            showwarning(title='Empty Fields', message='Please key in the WOP to be searched')
+        else:
+            self.initializeInputFields(master)
+            curCursor.execute('SELECT * FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
+            returnRow = curCursor.fetchone()
+            print('Return record: ', returnRow)
+            customerName.insert(0, returnRow[werStructure['customerName']])
+            workOrder.insert(0, returnRow[werStructure['workOrder']])
+            dateReceived.set_date(returnRow[werStructure['dateReceived']])
+            receivedBy.insert(0, returnRow[werStructure['receivedBy']])
+            numOfPieces.delete(0, END)
+            numOfPieces.insert(0, returnRow[werStructure['numOfPieces']])
+            ofPieces.delete(0, END)
+            ofPieces.insert(0, returnRow[werStructure['ofPieces']])
+            pictureStatus.set(returnRow[werStructure['pictureStatus']])
+            photoesStatus.set(returnRow[werStructure['photoesStatus']])
+            for ndx in returnRow[werStructure['productsTypeListbox']]:
+                productsTypeListbox.select_set(int(ndx))
+            for ndx in returnRow[werStructure['numberOfPartsListbox']]:
+                numberOfPartsListbox.select_set(int(ndx))
+            partsInBlueBin.set(returnRow[werStructure['partsInBlueBin']])
+            self.qcCheckedBy = returnRow[werStructure['qcCheckedBy']]
+            if (self.qcCheckedBy == None):
+                #SJ0270222 - If reaches here, record is not qc checked yet. Need to show qc check button, disable save and search button
+                self.saveButton.configure(state=DISABLED)
+                self.qcCheckButton.configure(state=NORMAL)
+                qcCheckedBy.configure(state=NORMAL)
+                qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
+            else:
+                qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
+            notes.insert(END, returnRow[werStructure['notes']])
+            #customerName, workOrder, dateReceived, receivedBy, numOfPieces,
+            #ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin
+
+    #SJ6260222 - Callback function to handle qc button press
+    def qcCheckCallback(self, master):
+        self.workOrder = workOrder.get()
+        if len(self.workOrder) == 0:
+            showwarning(title='Empty Fields', message='Please key in the WOP to be QC Passed')
+        else:
+            print('qc check button is pressed ')
+            #self.updateButton.configure(state=NORMAL)
+            self.saveButton.configure(state=DISABLED)
+            self.qcCheckButton.configure(state=NORMAL)
+            qcCheckedBy.configure(state=NORMAL)
+            qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
+
+    #SJ6260222 - Callback function to handle update button press
+    def updateCallback(self, master):
+        print('Inside update call back')
+        self.saveButton.configure(state=NORMAL)
 
     def cancelCallback(self, master):
         #global customerName
