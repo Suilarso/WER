@@ -63,15 +63,13 @@ QC_CHECKED_BY_LABEL_COL = PARTS_IN_BLUE_BIN_COL + 3       #col 4
 QC_CHECKED_BY_ENTRY_ROW = PARTS_IN_BLUE_BIN_ROW           #row 20
 QC_CHECKED_BY_ENTRY_COL = QC_CHECKED_BY_LABEL_COL + 1     #col 5
 #SJ6260222 - QC Check & Update Button
-QC_CHECK_BUTTON_ROW =  QC_CHECKED_BY_ENTRY_ROW    #row 5
+QC_CHECK_BUTTON_ROW =  QC_CHECKED_BY_ENTRY_ROW    #row 20
 QC_CHECK_BUTTON_COL = QC_CHECKED_BY_ENTRY_COL + 1 #col 6
-UPDATE_BUTTON_ROW = QC_CHECKED_BY_ENTRY_ROW       #row 5
-UPDATE_BUTTON_COL = QC_CHECKED_BY_ENTRY_COL + 1   #col 6
 #SJ1210222 - row 21 not used
-NOTE_LABEL_ROW = UPDATE_BUTTON_ROW + 2 #row 22
-NOTE_LABEL_COL = 1                     #col 2
-NOTE_ENTRY_ROW = NOTE_LABEL_ROW        #row 22
-NOTE_ENTRY_COL = NOTE_LABEL_COL + 1    #col 3
+NOTE_LABEL_ROW = QC_CHECK_BUTTON_ROW + 2 #row 22
+NOTE_LABEL_COL = 1                       #col 2
+NOTE_ENTRY_ROW = NOTE_LABEL_ROW          #row 22
+NOTE_ENTRY_COL = NOTE_LABEL_COL + 1      #col 3
 #SJ1210222 - row 23 not used
 CANCEL_BUTTON_ROW = NOTE_ENTRY_ROW + 2  #row 24
 CANCEL_BUTTON_COL = 1                   #col 1
@@ -81,7 +79,6 @@ SAVE_BUTTON_COL = CANCEL_BUTTON_COL + 4 #col 5
 #SJ1210222 - Output pad is used for debug purpose only it is not part of the date entry
 OUTPUT_PAD_ROW = 28
 OUTPUT_PAD_COL = 2
-
 
 #SJ0130222 - Ideally the products type list should be stored in a database; the setback of reading from a database
 #SJ0130222 - is that there is a need to write a code to allow user to do data entry into the database.
@@ -104,6 +101,7 @@ partsInBlueBin = 0
 qcCheckedBy = ''
 notes = ''
 #outputPad = ''
+qcCheckFlag = False
 
 #SJ3230222 - database and table global variables
 conn = ''
@@ -206,14 +204,10 @@ class WER_Main:
         self.qcCheckedByLabel = Label(master, text='QC Checked By: ').grid(row=QC_CHECKED_BY_LABEL_ROW, column=QC_CHECKED_BY_LABEL_COL)
         qcCheckedBy = Entry(master, state=DISABLED)  #SJ2220222 - Field will be enabled only in edit mode
         qcCheckedBy.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
-        #qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
 
-        #SJ6260222 - QC Check and Update button
         #SJ6260222 - QC Check button
         self.qcCheckButton = Button(text='QC Check', state=DISABLED, command=lambda x=master: self.qcCheckCallback(x))
         self.qcCheckButton.grid(row=QC_CHECK_BUTTON_ROW, column=QC_CHECK_BUTTON_COL)
-        #self.updateButton = Button(text='Update', state=DISABLED, command=lambda x=master: self.updateCallback(x))
-        #self.updateButton.grid(row=UPDATE_BUTTON_ROW, column=UPDATE_BUTTON_COL)
 
         #SJ3160222 - Text field for notes
         self.notesLabel = Label(master, text='Notes: ').grid(row=NOTE_LABEL_ROW, column=NOTE_LABEL_COL)
@@ -250,7 +244,7 @@ class WER_Main:
 
     #SJ0270222 - Search function to handle search button press
     def searchCallback(self, master):
-        print('Inside searchCallback')
+        global qcCheckFlag
         self.workOrder = workOrder.get()
         if len(self.workOrder) == 0:
             showwarning(title='Empty Fields', message='Please key in the WOP to be searched')
@@ -258,7 +252,6 @@ class WER_Main:
             self.initializeInputFields(master)
             curCursor.execute('SELECT * FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
             returnRow = curCursor.fetchone()
-            print('Return record: ', returnRow)
             customerName.insert(0, returnRow[werStructure['customerName']])
             workOrder.insert(0, returnRow[werStructure['workOrder']])
             dateReceived.set_date(returnRow[werStructure['dateReceived']])
@@ -279,34 +272,36 @@ class WER_Main:
                 #SJ0270222 - If reaches here, record is not qc checked yet. Need to show qc check button, disable save and search button
                 self.saveButton.configure(state=DISABLED)
                 self.qcCheckButton.configure(state=NORMAL)
-                qcCheckedBy.configure(state=NORMAL)
-                qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
+                qcCheckFlag = True
             else:
+                qcCheckedBy.configure(state=NORMAL)
                 qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
             notes.insert(END, returnRow[werStructure['notes']])
-            #customerName, workOrder, dateReceived, receivedBy, numOfPieces,
-            #ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin
 
     #SJ6260222 - Callback function to handle qc button press
     def qcCheckCallback(self, master):
-        self.workOrder = workOrder.get()
-        if len(self.workOrder) == 0:
-            showwarning(title='Empty Fields', message='Please key in the WOP to be QC Passed')
-        else:
-            print('qc check button is pressed ')
-            #self.updateButton.configure(state=NORMAL)
-            self.saveButton.configure(state=DISABLED)
-            self.qcCheckButton.configure(state=NORMAL)
+        global qcCheckedBy
+        global qcCheckFlag
+        if qcCheckFlag:
+            qcCheckFlag = False  #SJ1280222 - Here we set the flag to false as the button functionality had been changed to update
+            self.qcCheckButton.configure(text='Update')
             qcCheckedBy.configure(state=NORMAL)
             qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
-
-    #SJ6260222 - Callback function to handle update button press
-    def updateCallback(self, master):
-        print('Inside update call back')
-        self.saveButton.configure(state=NORMAL)
+        else:
+            self.workOrder = workOrder.get()
+            curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcCheckedBy.get(), self.workOrder))
+            conn.commit()
+            self.saveButton.configure(state=NORMAL)
+            self.qcCheckButton.configure(text='QC Check', state=DISABLED)
+            qcCheckedBy.delete(0, END)
+            qcCheckedBy.configure(state=DISABLED)
+            self.initializeInputFields(master)
 
     def cancelCallback(self, master):
         #global customerName
+        qcCheckedBy.delete(0, END)
+        qcCheckedBy.configure(state=DISABLED)
+        self.saveButton.configure(state=NORMAL)
         self.initializeInputFields(master)
 
     def saveCallback(self, master):
@@ -318,17 +313,6 @@ class WER_Main:
         if len(self.customerName) == 0 or len(self.workOrder) == 0:
             showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
         else:
-            #self.dateReceived = dateReceived.get_date()
-            #self.receivedBy = receivedBy.get()
-            #self.numOfPieces = eval(numOfPieces.get())
-            #self.ofPieces = eval(ofPieces.get())
-            #self.pictureStatus = pictureStatus.get()
-            #self.photoesStatus = photoesStatus.get()
-            #self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
-            #self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
-            #self.partsInBlueBin = partsInBlueBin.get()
-            #self.notes = notes.get(1.0, END)
-
             curCursor.execute('SELECT workOrder FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
             try:
                 count = curCursor.fetchone()[0]
@@ -357,13 +341,8 @@ class WER_Main:
             print('Fail to connect to database')
             quitter_function()
 
-        #outputPad.insert(0, self.productsTypeList+self.numberOfPartsList)
-        #print('product type list: ', ''.join(list(map(str, self.productsTypeList))))
-        #print('product type list: ', ''.join(list(map(str, self.numberOfPartsList))))
-
 
 def quitter_function():
-    #print('Good bye')
     conn.close()  #SJ5250222 - Close database connection
     root.destroy()
 
