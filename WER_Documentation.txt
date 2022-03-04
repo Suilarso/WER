@@ -1,0 +1,48 @@
+
+Github url: https://github.com/Suilarso/WER.git
+
+Software
+Programming Language: Python3
+GUI application: tkinter, tkcalendar
+Database application: SQLite
+
+Database
+Database name: werShipping.sqlite
+Table name: werChecklist
+werChecklist structure:
+    customerName - TEXT (30 characters)
+    workOrder - TEXT (10 characters, Mandatory)
+    dateReceived - DATE
+    receivedBy - TEXT (10 characters)
+    numOfPieces - INTEGER
+    ofPieces - INTEGER
+    pictureStatus - BOOLEAN
+    photoesStatus - BOOLEAN
+    productsTypeListbox - TEXT (20 characters)
+    numberOfPartsListbox - TEXT (15 characters)
+    partsInBlueBin - BOOLEAN
+    qcCheckedBy - TEXT (10 characters)
+    notes - TEXT (50 characters)
+
+To create a new checklist
+Key in 'Customer' and 'WO' fields and the rest of the fields appropriate to the type of product being received. 'Customer and WO' field are mandatory to create a new checklist. A warning message will pop up shoudl either of these fields is empty.
+Click on 'Save' button to save the entry or 'Cancel' button to cancel the entry without saving.
+
+To QC check a work order
+Key in the work order in 'WO' field and follow by a click on 'Search' button. If the work order had not been qc checked already, the 'QC Check' button will be enabled. Click on the 'QC Check' button and key in the initial of the individual who did the qc check and follow by a click on the 'Update' button.
+
+Bug report    
+Mar 1, 22 - Product type and part list not re-display properly
+Bug found on product type: For product selection from Coolant Pipe onward, will be saved into sql correctly, but will not be re-displayed correctly during search operation.
+Severity status: major.
+Root cause: the selection number return by listbox is a list of integer; but when saved to sql those numbers are translated into string without separator among different selections. For example: for selection of DPF and Coolant Pipe, the return integer will be 7, 10 but saved as 710 into sql; as such when it is retrieved back from sql, the 710 will be interpreted as item 7, 1, and 0 when in actual selection is 7 and 10.
+Status: This bug is solved on Mar 3, 22
+
+Mar 3, 22 - Date not refresh to current date after displaying a search record
+Bug found on date field: When displaying a searched record, the date field will reflect the date when the record was created, which is correct in this case; but when the cancel button is clicked, the date field is not set to today date; as such the next new record to be created, the user will have to select today date from the calendar, which in this case is a bit inconvenient.
+Severity status: minor.
+
+
+
+
+

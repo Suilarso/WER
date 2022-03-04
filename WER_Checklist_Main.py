@@ -76,7 +76,7 @@ CANCEL_BUTTON_COL = 1                   #col 1
 SAVE_BUTTON_ROW = CANCEL_BUTTON_ROW     #row 24
 SAVE_BUTTON_COL = CANCEL_BUTTON_COL + 4 #col 5
 
-#SJ1210222 - Output pad is used for debug purpose only it is not part of the date entry
+#SJ1210222 - Output pad is used for debug purpose only it is not part of the data entry
 OUTPUT_PAD_ROW = 28
 OUTPUT_PAD_COL = 2
 
@@ -182,11 +182,18 @@ class WER_Main:
         self.photoesCheckButton.grid(row=PHOTOES_CHECK_BUTTON_ROW, column=PHOTOES_CHECK_BUTTON_COL)
 
         #SJ0130222 - Input field for product types
+        productsTypeListboxFrame = Frame(master)
+        productsTypeScrollbar = Scrollbar(productsTypeListboxFrame, orient=VERTICAL)
         self.productsTypeLabel = Label(master, text='Received items: ').grid(row=PRODUCTS_TYPE_LABEL_ROW, column=PRODUCTS_TYPE_LABEL_COL)
-        productsTypeListbox = Listbox(master, selectmode=MULTIPLE, exportselection=0)
+        #productsTypeListbox = Listbox(master, selectmode=MULTIPLE, exportselection=0)
+        productsTypeListbox = Listbox(productsTypeListboxFrame, selectmode=MULTIPLE, exportselection=0, yscrollcommand=productsTypeScrollbar.set)
         for productItem in productsType:
             productsTypeListbox.insert(END, productItem)
-        productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+        #productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
+        productsTypeScrollbar.config(command=productsTypeListbox.yview)
+        productsTypeScrollbar.pack(side=RIGHT, fill=Y)
+        productsTypeListbox.pack(side=LEFT, fill=BOTH, expand=1)
+        productsTypeListboxFrame.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
 
         #SJ1140222 - Listbox fields for number of parts
         self.numOfPartsLabel = Label(master, text='# of parts: ').grid(row=NUMBER_OF_PARTS_LABEL_ROW, column=NUMBER_OF_PARTS_LABEL_COL)
@@ -224,8 +231,10 @@ class WER_Main:
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
 
     def initializeInputFields(self, master):
-        self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
-        self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
+        #self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
+        #self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
+        self.productsTypeList = self.removeAlphaChar(''.join(list(map(str, productsTypeListbox.curselection()))), "Initialize")
+        self.numberOfPartsList = self.removeAlphaChar(''.join(list(map(str, numberOfPartsListbox.curselection()))), "Initialize")
         customerName.delete(0, END)
         customerName.focus_set()  #SJ1210222 - Put this field into focus
         workOrder.delete(0, END)
@@ -252,31 +261,48 @@ class WER_Main:
             self.initializeInputFields(master)
             curCursor.execute('SELECT * FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
             returnRow = curCursor.fetchone()
-            customerName.insert(0, returnRow[werStructure['customerName']])
-            workOrder.insert(0, returnRow[werStructure['workOrder']])
-            dateReceived.set_date(returnRow[werStructure['dateReceived']])
-            receivedBy.insert(0, returnRow[werStructure['receivedBy']])
-            numOfPieces.delete(0, END)
-            numOfPieces.insert(0, returnRow[werStructure['numOfPieces']])
-            ofPieces.delete(0, END)
-            ofPieces.insert(0, returnRow[werStructure['ofPieces']])
-            pictureStatus.set(returnRow[werStructure['pictureStatus']])
-            photoesStatus.set(returnRow[werStructure['photoesStatus']])
-            for ndx in returnRow[werStructure['productsTypeListbox']]:
-                productsTypeListbox.select_set(int(ndx))
-            for ndx in returnRow[werStructure['numberOfPartsListbox']]:
-                numberOfPartsListbox.select_set(int(ndx))
-            partsInBlueBin.set(returnRow[werStructure['partsInBlueBin']])
-            self.qcCheckedBy = returnRow[werStructure['qcCheckedBy']]
-            if (self.qcCheckedBy == None):
-                #SJ0270222 - If reaches here, record is not qc checked yet. Need to show qc check button, disable save and search button
-                self.saveButton.configure(state=DISABLED)
-                self.qcCheckButton.configure(state=NORMAL)
-                qcCheckFlag = True
+            if returnRow != None:
+                print('returnRow ', returnRow)
+                customerName.insert(0, returnRow[werStructure['customerName']])
+                workOrder.insert(0, returnRow[werStructure['workOrder']])
+                dateReceived.set_date(returnRow[werStructure['dateReceived']])
+                receivedBy.insert(0, returnRow[werStructure['receivedBy']])
+                numOfPieces.delete(0, END)
+                numOfPieces.insert(0, returnRow[werStructure['numOfPieces']])
+                ofPieces.delete(0, END)
+                ofPieces.insert(0, returnRow[werStructure['ofPieces']])
+                pictureStatus.set(returnRow[werStructure['pictureStatus']])
+                photoesStatus.set(returnRow[werStructure['photoesStatus']])
+                self.tempProductType = self.removeAlphaChar(returnRow[werStructure['productsTypeListbox']], "Search")
+                for ndx in self.tempProductType:
+                    productsTypeListbox.select_set(int(ndx))
+                self.tempPartsList = self.removeAlphaChar(returnRow[werStructure['numberOfPartsListbox']], "Search")
+                for ndx in self.tempPartsList:
+                    numberOfPartsListbox.select_set(int(ndx))
+                partsInBlueBin.set(returnRow[werStructure['partsInBlueBin']])
+                self.qcCheckedBy = returnRow[werStructure['qcCheckedBy']]
+                if (self.qcCheckedBy == None):
+                    #SJ0270222 - If reaches here, record is not qc checked yet. Need to show qc check button, disable save and search button
+                    self.saveButton.configure(state=DISABLED)
+                    self.qcCheckButton.configure(state=NORMAL)
+                    qcCheckFlag = True
+                else:
+                    qcCheckedBy.configure(state=NORMAL)
+                    qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
+                notes.insert(END, returnRow[werStructure['notes']])
             else:
-                qcCheckedBy.configure(state=NORMAL)
-                qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
-            notes.insert(END, returnRow[werStructure['notes']])
+                showwarning(title='Record Not Found', message='Work order '+self.workOrder+' not found.')
+
+    #SJ3020322 - Thid method is used to strip of comma and bracket from incoming string
+    def removeAlphaChar(self, inString, callingFn):
+        print('From ', callingFn)
+        print('inString ', inString)
+        #SJ3020322 - First we remove the , to be followed by left bracket and finally right brachket
+        self.tempString = inString.replace(",", '').replace("(", '').replace(")", '')
+        print('Replaced string', self.tempString)
+        self.tempString = self.tempString.split()
+        print('Final list ', self.tempString, type(self.tempString))
+        return (self.tempString)
 
     #SJ6260222 - Callback function to handle qc button press
     def qcCheckCallback(self, master):
@@ -314,18 +340,29 @@ class WER_Main:
             showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
         else:
             curCursor.execute('SELECT workOrder FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
-            try:
-                count = curCursor.fetchone()[0]
+            count = curCursor.fetchone()
+            if count != None:
+                #count = curCursor.fetchone()[0]
                 print('fetchone: ', count)
                 showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
-            except:
+            else:
+                self.prodType = productsTypeListbox.curselection()
+                self.prodString = list(self.prodType)
+                print('Prod type: ', self.prodType, self.prodString)
                 curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
                                ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
                                notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
                                receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
-                               ''.join(list(map(str, productsTypeListbox.curselection()))), ''.join(list(map(str, numberOfPartsListbox.curselection()))),
+                               str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
                                partsInBlueBin.get(), notes.get(1.0, END)))
                 conn.commit()
+                #curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
+                #               ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
+                #               notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
+                #               receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
+                #               ''.join(list(map(str, productsTypeListbox.curselection()))), ''.join(list(map(str, numberOfPartsListbox.curselection()))),
+                #               partsInBlueBin.get(), notes.get(1.0, END)))
+                #conn.commit()
 
             self.initializeInputFields(master)
 
@@ -350,3 +387,5 @@ root = Tk()
 root.protocol('WM_DELETE_WINDOW', quitter_function)
 app = WER_Main(root)
 mainloop()
+
+#str(list(productsTypeListbox.curselection())), str(list(numberOfPartsListbox.curselection())),
