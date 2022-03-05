@@ -231,10 +231,10 @@ class WER_Main:
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
 
     def initializeInputFields(self, master):
-        #self.productsTypeList = ''.join(list(map(str, productsTypeListbox.curselection())))
-        #self.numberOfPartsList = ''.join(list(map(str, numberOfPartsListbox.curselection())))
-        self.productsTypeList = self.removeAlphaChar(''.join(list(map(str, productsTypeListbox.curselection()))), "Initialize")
-        self.numberOfPartsList = self.removeAlphaChar(''.join(list(map(str, numberOfPartsListbox.curselection()))), "Initialize")
+        #self.productsTypeList = self.removeAlphaChar(''.join(list(map(str, productsTypeListbox.curselection()))), "Initialize")
+        self.productsTypeList = self.removeAlphaChar(str(productsTypeListbox.curselection()), "Initialize")
+        #self.numberOfPartsList = self.removeAlphaChar(''.join(list(map(str, numberOfPartsListbox.curselection()))), "Initialize")
+        self.numberOfPartsList = self.removeAlphaChar(str(numberOfPartsListbox.curselection()), "Initialize")
         customerName.delete(0, END)
         customerName.focus_set()  #SJ1210222 - Put this field into focus
         workOrder.delete(0, END)
@@ -249,7 +249,13 @@ class WER_Main:
         for c in self.productsTypeList: productsTypeListbox.select_clear(int(c))
         for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
         partsInBlueBin.set(0)
+        qcCheckedBy.delete(0, END)
+        qcCheckedBy.configure(state=DISABLED)
         notes.delete(1.0, END)
+
+        #SJ6050322 - Put back all button functionality accordingly
+        self.saveButton.configure(state=NORMAL)
+        self.qcCheckButton.configure(text='QC Check', state=DISABLED)
 
     #SJ0270222 - Search function to handle search button press
     def searchCallback(self, master):
@@ -262,7 +268,7 @@ class WER_Main:
             curCursor.execute('SELECT * FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
             returnRow = curCursor.fetchone()
             if returnRow != None:
-                print('returnRow ', returnRow)
+                #print('returnRow ', returnRow)
                 customerName.insert(0, returnRow[werStructure['customerName']])
                 workOrder.insert(0, returnRow[werStructure['workOrder']])
                 dateReceived.set_date(returnRow[werStructure['dateReceived']])
@@ -295,13 +301,9 @@ class WER_Main:
 
     #SJ3020322 - Thid method is used to strip of comma and bracket from incoming string
     def removeAlphaChar(self, inString, callingFn):
-        print('From ', callingFn)
-        print('inString ', inString)
         #SJ3020322 - First we remove the , to be followed by left bracket and finally right brachket
         self.tempString = inString.replace(",", '').replace("(", '').replace(")", '')
-        print('Replaced string', self.tempString)
         self.tempString = self.tempString.split()
-        print('Final list ', self.tempString, type(self.tempString))
         return (self.tempString)
 
     #SJ6260222 - Callback function to handle qc button press
@@ -343,12 +345,12 @@ class WER_Main:
             count = curCursor.fetchone()
             if count != None:
                 #count = curCursor.fetchone()[0]
-                print('fetchone: ', count)
+                #print('fetchone: ', count)
                 showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
             else:
                 self.prodType = productsTypeListbox.curselection()
                 self.prodString = list(self.prodType)
-                print('Prod type: ', self.prodType, self.prodString)
+                #print('Prod type: ', self.prodType, self.prodString)
                 curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
                                ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
                                notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
