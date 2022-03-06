@@ -41,6 +41,7 @@ Status: This bug is solved on Mar 3, 22
 Mar 3, 22 - Date not refresh to current date after displaying a search record
 Bug found on date field: When displaying a searched record, the date field will reflect the date when the record was created, which is correct in this case; but when the cancel button is clicked, the date field is not set to today date; as such the next new record to be created, the user will have to select today date from the calendar, which in this case is a bit inconvenient.
 Severity status: minor.
+Status: This bug is resolved on Mar 5, 22
 
 
 
