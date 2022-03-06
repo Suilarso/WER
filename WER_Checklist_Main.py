@@ -144,7 +144,7 @@ class WER_Main:
         workOrder = Entry(master)
         workOrder.grid(row=WORK_ORDER_ENTRY_ROW, column=WORK_ORDER_ENTRY_COL)
 
-        #SJ6260222 - QC Check button
+        #SJ6260222 - Search button
         self.searchButton = Button(text='Search', command=lambda x=master: self.searchCallback(x))
         self.searchButton.grid(row=SEARCH_BUTTON_ROW, column=SEARCH_BUTTON_COL)
 
@@ -231,26 +231,39 @@ class WER_Main:
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
 
     def initializeInputFields(self, master):
+        productsTypeListbox.configure(selectmode=MULTIPLE)
         #self.productsTypeList = self.removeAlphaChar(''.join(list(map(str, productsTypeListbox.curselection()))), "Initialize")
         self.productsTypeList = self.removeAlphaChar(str(productsTypeListbox.curselection()), "Initialize")
+        numberOfPartsListbox.configure(selectmode=MULTIPLE)
         #self.numberOfPartsList = self.removeAlphaChar(''.join(list(map(str, numberOfPartsListbox.curselection()))), "Initialize")
         self.numberOfPartsList = self.removeAlphaChar(str(numberOfPartsListbox.curselection()), "Initialize")
+        customerName.configure(state=NORMAL)
         customerName.delete(0, END)
         customerName.focus_set()  #SJ1210222 - Put this field into focus
         workOrder.delete(0, END)
-        #dateReceived
+        self.todayDate = datetime(1,1,1).now()  #SJ5250222 - Getting today system date
+        dateReceived.configure(state=NORMAL)
+        dateReceived.set_date(str(self.todayDate.strftime("%Y-%m-%d")))
+        receivedBy.configure(state=NORMAL)
         receivedBy.delete(0, END)
+        numOfPieces.configure(state=NORMAL)
         numOfPieces.delete(0, END)
         numOfPieces.insert(0, '1')
+        ofPieces.configure(state=NORMAL)
         ofPieces.delete(0, END)
         ofPieces.insert(0, '1')
+        self.pictureCheckButton.configure(state=NORMAL)
         pictureStatus.set(0)
+        self.photoesCheckButton.configure(state=NORMAL)
         photoesStatus.set(0)
         for c in self.productsTypeList: productsTypeListbox.select_clear(int(c))
         for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
+        self.partsInBlueBinCheckButton.configure(state=NORMAL)
         partsInBlueBin.set(0)
+        qcCheckedBy.configure(state=NORMAL)
         qcCheckedBy.delete(0, END)
         qcCheckedBy.configure(state=DISABLED)
+        notes.configure(state=NORMAL)
         notes.delete(1.0, END)
 
         #SJ6050322 - Put back all button functionality accordingly
@@ -270,32 +283,44 @@ class WER_Main:
             if returnRow != None:
                 #print('returnRow ', returnRow)
                 customerName.insert(0, returnRow[werStructure['customerName']])
+                customerName.configure(state=DISABLED)
                 workOrder.insert(0, returnRow[werStructure['workOrder']])
                 dateReceived.set_date(returnRow[werStructure['dateReceived']])
+                dateReceived.configure(state=DISABLED)
                 receivedBy.insert(0, returnRow[werStructure['receivedBy']])
+                receivedBy.configure(state=DISABLED)
                 numOfPieces.delete(0, END)
                 numOfPieces.insert(0, returnRow[werStructure['numOfPieces']])
+                numOfPieces.configure(state=DISABLED)
                 ofPieces.delete(0, END)
                 ofPieces.insert(0, returnRow[werStructure['ofPieces']])
+                ofPieces.configure(state=DISABLED)
                 pictureStatus.set(returnRow[werStructure['pictureStatus']])
+                self.pictureCheckButton.configure(state=DISABLED)
                 photoesStatus.set(returnRow[werStructure['photoesStatus']])
+                self.photoesCheckButton.configure(state=DISABLED)
                 self.tempProductType = self.removeAlphaChar(returnRow[werStructure['productsTypeListbox']], "Search")
                 for ndx in self.tempProductType:
                     productsTypeListbox.select_set(int(ndx))
+                productsTypeListbox.configure(selectmode=BROWSE)
                 self.tempPartsList = self.removeAlphaChar(returnRow[werStructure['numberOfPartsListbox']], "Search")
                 for ndx in self.tempPartsList:
                     numberOfPartsListbox.select_set(int(ndx))
+                numberOfPartsListbox.configure(selectmode=BROWSE)
                 partsInBlueBin.set(returnRow[werStructure['partsInBlueBin']])
+                self.partsInBlueBinCheckButton.configure(state=DISABLED)
                 self.qcCheckedBy = returnRow[werStructure['qcCheckedBy']]
                 if (self.qcCheckedBy == None):
                     #SJ0270222 - If reaches here, record is not qc checked yet. Need to show qc check button, disable save and search button
-                    self.saveButton.configure(state=DISABLED)
                     self.qcCheckButton.configure(state=NORMAL)
                     qcCheckFlag = True
                 else:
                     qcCheckedBy.configure(state=NORMAL)
                     qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
+                    qcCheckedBy.configure(state=DISABLED)
                 notes.insert(END, returnRow[werStructure['notes']])
+                notes.configure(state=DISABLED)
+                self.saveButton.configure(state=DISABLED)
             else:
                 showwarning(title='Record Not Found', message='Work order '+self.workOrder+' not found.')
 
@@ -319,17 +344,10 @@ class WER_Main:
             self.workOrder = workOrder.get()
             curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcCheckedBy.get(), self.workOrder))
             conn.commit()
-            self.saveButton.configure(state=NORMAL)
-            self.qcCheckButton.configure(text='QC Check', state=DISABLED)
-            qcCheckedBy.delete(0, END)
-            qcCheckedBy.configure(state=DISABLED)
             self.initializeInputFields(master)
 
     def cancelCallback(self, master):
         #global customerName
-        qcCheckedBy.delete(0, END)
-        qcCheckedBy.configure(state=DISABLED)
-        self.saveButton.configure(state=NORMAL)
         self.initializeInputFields(master)
 
     def saveCallback(self, master):
