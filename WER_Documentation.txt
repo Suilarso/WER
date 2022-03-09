@@ -25,7 +25,7 @@ werChecklist structure:
     notes - TEXT (50 characters)
 
 To create a new checklist
-Key in 'Customer' and 'WO' fields and the rest of the fields appropriate to the type of product being received. 'Customer and WO' field are mandatory to create a new checklist. A warning message will pop up shoudl either of these fields is empty.
+Key in 'Customer' and 'WO' fields and the rest of the fields appropriate to the type of product being received. 'Customer and WO' field are mandatory to create a new checklist. A warning message will pop up should either of these fields is empty.
 Click on 'Save' button to save the entry or 'Cancel' button to cancel the entry without saving.
 
 To QC check a work order
