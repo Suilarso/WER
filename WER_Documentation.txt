@@ -31,7 +31,7 @@ Click on 'Save' button to save the entry or 'Cancel' button to cancel the entry 
 To QC check a work order
 Key in the work order in 'WO' field and follow by a click on 'Search' button. If the work order had not been qc checked already, the 'QC Check' button will be enabled. Click on the 'QC Check' button and key in the initial of the individual who did the qc check and follow by a click on the 'Update' button.
 
-Bug report    
+Bug report
 Mar 1, 22 - Product type and part list not re-display properly
 Bug found on product type: For product selection from Coolant Pipe onward, will be saved into sql correctly, but will not be re-displayed correctly during search operation.
 Severity status: major.
@@ -43,7 +43,24 @@ Bug found on date field: When displaying a searched record, the date field will 
 Severity status: minor.
 Status: This bug is resolved on Mar 5, 22
 
+Apr 12, 22 - When piece field is left empty, record will not be saved
+If you only enter Customer and WO and leave the Piece(s) field empty, then click Save, it won’t be saved. I know this is
+because Piece is a mandatory field and cannot be empty. But I think it would be preferable if there is a popup to let users
+know that they must enter a value for Piece.
+Severity status: minor.
+Status:
 
+Apr 12, 22 - Duplicate record fields will be emptied after the popup window.
+When you finished entering the fields and clicked Save, if the WO already existed in the database,
+you will be prompted with a message. It is good and necessary. But after I close this popup window, all fields have
+been emptied and I have to type them again. My suggestion is to empty the WO field only.
+Severity status: minor.
+Status: This bug is resolved on Mar 13, 22
 
-
-
+Apr 12, 22 - Record is able to save even when QC Check field is blank
+When I searched out one WO and wanted to mark it as “QC Checked”, if I didn’t type anything in the field and
+click Update, it could be saved without a QC checker. I am wondering if it is better to have a popup
+reminding users to input a name for the QC checker when they have not typed anything for the “QC Checked by”
+field and are clicking the “Update” button?
+Severity status: minor.
+Status: This bug is resolved on Apr 12, 22

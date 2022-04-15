@@ -342,40 +342,28 @@ class WER_Main:
             qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
         else:
             self.workOrder = workOrder.get()
-            curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcCheckedBy.get(), self.workOrder))
-            conn.commit()
-            self.initializeInputFields(master)
+            if qcCheckedBy.get() == '':
+                showwarning(title='Empty Field', message='Please key in your name or initials.')
+            else:
+                curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcCheckedBy.get(), self.workOrder))
+                conn.commit()
+                self.initializeInputFields(master)
 
     def cancelCallback(self, master):
         #global customerName
         self.initializeInputFields(master)
 
     def saveCallback(self, master):
-        global tableName
-        global conn
-        global curCursor
-        self.customerName = customerName.get()
-        self.workOrder = workOrder.get()
-        if len(self.customerName) == 0 or len(self.workOrder) == 0:
-            showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
-        else:
-            curCursor.execute('SELECT workOrder FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
-            count = curCursor.fetchone()
-            if count != None:
-                #count = curCursor.fetchone()[0]
-                #print('fetchone: ', count)
-                showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
-            else:
-                self.prodType = productsTypeListbox.curselection()
-                self.prodString = list(self.prodType)
-                #print('Prod type: ', self.prodType, self.prodString)
-                curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
-                               ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
-                               notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
-                               receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
-                               str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
-                               partsInBlueBin.get(), notes.get(1.0, END)))
-                conn.commit()
+        if (self.verifyInputData(master) == True):
+            self.prodType = productsTypeListbox.curselection()
+            self.prodString = list(self.prodType)
+            curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
+                           ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
+                           notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
+                           receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
+                           str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
+                           partsInBlueBin.get(), notes.get(1.0, END)))
+            conn.commit()
                 #curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
                 #               ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
                 #               notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
@@ -385,6 +373,60 @@ class WER_Main:
                 #conn.commit()
 
             self.initializeInputFields(master)
+
+    #SJ3130422 - This method verify input data validity
+    def verifyInputData(self, master):
+        global tableName
+        global conn
+        global curCursor
+
+        self.returnValue = False
+        self.customerName = customerName.get()
+        self.workOrder = workOrder.get()
+        self.receivedBy = receivedBy.get()
+        self.numOfPieces = numOfPieces.get().strip()
+        self.ofPieces = ofPieces.get().strip()
+
+        #SJ3130422 - First we check to see if customerName or workOrder is empty
+        if len(self.customerName) == 0 or len(self.workOrder) == 0:
+            showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
+            customerName.focus_set()
+        else:
+            #SJ3130422 - Here we check for duplicate workOrder
+            curCursor.execute('SELECT workOrder FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
+            count = curCursor.fetchone()
+            if count != None:
+                #count = curCursor.fetchone()[0]
+                #print('fetchone: ', count)
+                showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
+                workOrder.delete(0, END)  #SJ3130422 - Empty workOrder field
+                workOrder.focus_set()  #SJ3130422 - Put workOrder field to focus
+            #SJ3130422 - receivedBy field is empty
+            elif (self.receivedBy == ''):
+                showwarning(title='Empty Field', message='Received by input field is empty.')
+                receivedBy.focus_set()
+            #SJ3130422 - Check if numOfPieces contains invalid characters
+            elif (not (self.numOfPieces.isdigit())):
+                showwarning(title='Invalid Data', message='Pieces must be a number.')
+                numOfPieces.focus_set()
+            #SJ3130422 - Check if ofPieces contains invalid characters
+            elif (not (self.ofPieces.isdigit())):
+                showwarning(title='Invalid Data', message='Of Pieces must be a number.')
+                ofPieces.focus_set()
+            #SJ3130422 - Check if numOfPieces or ofPieces is greater than 0
+            elif (eval(self.numOfPieces) <= 0):
+                showwarning(title='Invalid Data', message='Pieces must be greater than 0.')
+                numOfPieces.focus_set()
+            elif (eval(self.ofPieces)  <= 0):
+                showwarning(title='Invalid Data', message='Of Pieces must be greater than 0.')
+                ofPieces.focus_set()
+            elif (eval(self.numOfPieces) != eval(self.ofPieces)):
+                showwarning(title='Invalid Data', message='Pieces and Of Pieces do not match.')
+                numOfPieces.focus_set()
+            else:
+                self.returnValue = True
+
+        return (self.returnValue)
 
     #SJ2220222 - Setup connection to wershipping database
     def setupSQLiteDBase(self, dbName):
