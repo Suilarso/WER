@@ -48,7 +48,7 @@ If you only enter Customer and WO and leave the Piece(s) field empty, then click
 because Piece is a mandatory field and cannot be empty. But I think it would be preferable if there is a popup to let users
 know that they must enter a value for Piece.
 Severity status: minor.
-Status:
+Status: This bug is resolved on Mar 17, 22
 
 Apr 12, 22 - Duplicate record fields will be emptied after the popup window.
 When you finished entering the fields and clicked Save, if the WO already existed in the database,

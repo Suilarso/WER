@@ -100,7 +100,6 @@ numberOfPartsListbox = []
 partsInBlueBin = 0
 qcCheckedBy = ''
 notes = ''
-#outputPad = ''
 qcCheckFlag = False
 
 #SJ3230222 - database and table global variables
@@ -131,7 +130,6 @@ class WER_Main:
         global partsInBlueBin
         global qcCheckedBy
         global notes
-        #global outputPad
 
         #SJ5110222 - Input field for customer name
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
@@ -185,11 +183,9 @@ class WER_Main:
         productsTypeListboxFrame = Frame(master)
         productsTypeScrollbar = Scrollbar(productsTypeListboxFrame, orient=VERTICAL)
         self.productsTypeLabel = Label(master, text='Received items: ').grid(row=PRODUCTS_TYPE_LABEL_ROW, column=PRODUCTS_TYPE_LABEL_COL)
-        #productsTypeListbox = Listbox(master, selectmode=MULTIPLE, exportselection=0)
         productsTypeListbox = Listbox(productsTypeListboxFrame, selectmode=MULTIPLE, exportselection=0, yscrollcommand=productsTypeScrollbar.set)
         for productItem in productsType:
             productsTypeListbox.insert(END, productItem)
-        #productsTypeListbox.grid(row=PRODUCTS_TYPE_LIST_BOX_ROW, column=PRODUCTS_TYPE_LIST_BOX_COL)
         productsTypeScrollbar.config(command=productsTypeListbox.yview)
         productsTypeScrollbar.pack(side=RIGHT, fill=Y)
         productsTypeListbox.pack(side=LEFT, fill=BOTH, expand=1)
@@ -221,9 +217,6 @@ class WER_Main:
         notes = Text(master, font=('Verdana', 10), height=6, width=20)
         notes.grid(row=NOTE_ENTRY_ROW, column=NOTE_ENTRY_COL)
 
-        #outputPad = Entry(master)
-        #outputPad.grid(row=OUTPUT_PAD_ROW, column=OUTPUT_PAD_COL)
-
         self.cancelButton = Button(text='Cancel', command=lambda x=master: self.cancelCallback(x))
         self.cancelButton.grid(row=CANCEL_BUTTON_ROW, column=CANCEL_BUTTON_COL)
 
@@ -232,10 +225,8 @@ class WER_Main:
 
     def initializeInputFields(self, master):
         productsTypeListbox.configure(selectmode=MULTIPLE)
-        #self.productsTypeList = self.removeAlphaChar(''.join(list(map(str, productsTypeListbox.curselection()))), "Initialize")
         self.productsTypeList = self.removeAlphaChar(str(productsTypeListbox.curselection()), "Initialize")
         numberOfPartsListbox.configure(selectmode=MULTIPLE)
-        #self.numberOfPartsList = self.removeAlphaChar(''.join(list(map(str, numberOfPartsListbox.curselection()))), "Initialize")
         self.numberOfPartsList = self.removeAlphaChar(str(numberOfPartsListbox.curselection()), "Initialize")
         customerName.configure(state=NORMAL)
         customerName.delete(0, END)
@@ -273,15 +264,14 @@ class WER_Main:
     #SJ0270222 - Search function to handle search button press
     def searchCallback(self, master):
         global qcCheckFlag
-        self.workOrder = workOrder.get()
+        self.workOrder = workOrder.get().strip()
         if len(self.workOrder) == 0:
-            showwarning(title='Empty Fields', message='Please key in the WOP to be searched')
+            showwarning(title='Empty Fields', message='Please key in the WO to be searched')
         else:
             self.initializeInputFields(master)
             curCursor.execute('SELECT * FROM werChecklist WHERE workOrder = ? LIMIT 1', (self.workOrder, ))
             returnRow = curCursor.fetchone()
             if returnRow != None:
-                #print('returnRow ', returnRow)
                 customerName.insert(0, returnRow[werStructure['customerName']])
                 customerName.configure(state=DISABLED)
                 workOrder.insert(0, returnRow[werStructure['workOrder']])
@@ -324,7 +314,7 @@ class WER_Main:
             else:
                 showwarning(title='Record Not Found', message='Work order '+self.workOrder+' not found.')
 
-    #SJ3020322 - Thid method is used to strip of comma and bracket from incoming string
+    #SJ3020322 - This method is used to strip of comma and bracket from incoming string
     def removeAlphaChar(self, inString, callingFn):
         #SJ3020322 - First we remove the , to be followed by left bracket and finally right brachket
         self.tempString = inString.replace(",", '').replace("(", '').replace(")", '')
@@ -335,44 +325,47 @@ class WER_Main:
     def qcCheckCallback(self, master):
         global qcCheckedBy
         global qcCheckFlag
+        global workOrder
         if qcCheckFlag:
             qcCheckFlag = False  #SJ1280222 - Here we set the flag to false as the button functionality had been changed to update
+            workOrder.configure(state=DISABLED)  #SJ0170422 - Disabled workOrder field to prevent it from being updated
             self.qcCheckButton.configure(text='Update')
             qcCheckedBy.configure(state=NORMAL)
             qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
         else:
-            self.workOrder = workOrder.get()
-            if qcCheckedBy.get() == '':
+            if qcCheckedBy.get().strip() == '':
                 showwarning(title='Empty Field', message='Please key in your name or initials.')
             else:
-                curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcCheckedBy.get(), self.workOrder))
+                self.workOrder = workOrder.get().strip()
+                self.qcCheckedBy = qcCheckedBy.get().strip()
+                curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (self.qcCheckedBy, self.workOrder))
                 conn.commit()
+                workOrder.configure(state=NORMAL)  #SJ0170422 - Reinstate workOrder field to normal
                 self.initializeInputFields(master)
 
     def cancelCallback(self, master):
-        #global customerName
+        global qcCheckFlag
+        global workOrder
+        if qcCheckFlag == False:
+            workOrder.configure(state=NORMAL)  #SJ0170422 - Reinstate workOrder field which was disabled in qcCheckCallback
         self.initializeInputFields(master)
 
     def saveCallback(self, master):
         if (self.verifyInputData(master) == True):
-            self.prodType = productsTypeListbox.curselection()
-            self.prodString = list(self.prodType)
-            curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
-                           ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
-                           notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
-                           receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
-                           str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
-                           partsInBlueBin.get(), notes.get(1.0, END)))
-            conn.commit()
-                #curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
-                #               ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
-                #               notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
-                #               receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
-                #               ''.join(list(map(str, productsTypeListbox.curselection()))), ''.join(list(map(str, numberOfPartsListbox.curselection()))),
-                #               partsInBlueBin.get(), notes.get(1.0, END)))
-                #conn.commit()
+            #self.prodType = productsTypeListbox.curselection()
+            #self.prodString = list(self.prodType)
+            try:
+                curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
+                               ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
+                               notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
+                               receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
+                               str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
+                               partsInBlueBin.get(), notes.get(1.0, END)))
+                conn.commit()
 
-            self.initializeInputFields(master)
+                self.initializeInputFields(master)
+            except:
+                showwarning(title='Critical Error', message='Data entry error. Please check all input data.')
 
     #SJ3130422 - This method verify input data validity
     def verifyInputData(self, master):
@@ -381,9 +374,9 @@ class WER_Main:
         global curCursor
 
         self.returnValue = False
-        self.customerName = customerName.get()
-        self.workOrder = workOrder.get()
-        self.receivedBy = receivedBy.get()
+        self.customerName = customerName.get().strip()
+        self.workOrder = workOrder.get().strip()
+        self.receivedBy = receivedBy.get().strip()
         self.numOfPieces = numOfPieces.get().strip()
         self.ofPieces = ofPieces.get().strip()
 
@@ -397,7 +390,6 @@ class WER_Main:
             count = curCursor.fetchone()
             if count != None:
                 #count = curCursor.fetchone()[0]
-                #print('fetchone: ', count)
                 showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
                 workOrder.delete(0, END)  #SJ3130422 - Empty workOrder field
                 workOrder.focus_set()  #SJ3130422 - Put workOrder field to focus
