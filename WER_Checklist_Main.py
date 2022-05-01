@@ -75,6 +75,8 @@ CANCEL_BUTTON_ROW = NOTE_ENTRY_ROW + 2  #row 24
 CANCEL_BUTTON_COL = 1                   #col 1
 SAVE_BUTTON_ROW = CANCEL_BUTTON_ROW     #row 24
 SAVE_BUTTON_COL = CANCEL_BUTTON_COL + 4 #col 5
+BROWSE_BUTTON_ROW = CANCEL_BUTTON_ROW
+BROWSE_BUTTON_COL = CANCEL_BUTTON_COL + 2
 
 #SJ1210222 - Output pad is used for debug purpose only it is not part of the data entry
 OUTPUT_PAD_ROW = 28
@@ -115,6 +117,7 @@ class WER_Main:
         master.title('West End Radiators')
         self.setupDataEntryScreen(master)
         self.setupSQLiteDBase('./dbase/werShipping.sqlite')
+        self.sjDate = 0  #SJ1250422 - Created to accept date from date dialog
 
     def setupDataEntryScreen(self, master):
         global customerName
@@ -222,6 +225,10 @@ class WER_Main:
 
         self.saveButton = Button(text='Save', command=lambda x=master: self.saveCallback(x))
         self.saveButton.grid(row=SAVE_BUTTON_ROW, column=SAVE_BUTTON_COL)
+
+        #SJ4210422 - Browse Button
+        self.browseButton = Button(text='Browse', command=lambda x=master: self.browseCallback(x))
+        self.browseButton.grid(row=BROWSE_BUTTON_ROW, column=BROWSE_BUTTON_COL)
 
     def initializeInputFields(self, master):
         productsTypeListbox.configure(selectmode=MULTIPLE)
@@ -369,7 +376,7 @@ class WER_Main:
 
     #SJ3130422 - This method verify input data validity
     def verifyInputData(self, master):
-        global tableName
+        #global tableName  #SJ4210422 - doesn't seem to be in used
         global conn
         global curCursor
 
@@ -420,6 +427,25 @@ class WER_Main:
 
         return (self.returnValue)
 
+    #SJ4210422 - Callback for browse Button
+    def browseCallback(self, master):
+        global conn
+        global curCursor
+        self.fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
+
+        self.inputDate = selectDateDialog(master)
+        master.wait_window(self.inputDate.dateDialog)
+        self.fromDate = self.inputDate.getFromDate()
+        print('Return from selectDateDialog: ', self.fromDate)
+
+        #curCursor.execute('SELECT workOrder, customerName FROM werChecklist WHERE dateReceived = ?', [self.fromDate])
+        #curCursor.execute('SELECT workOrder, customerName FROM werChecklist WHERE dateReceived = ?', (self.fromDate,))
+        #self.recData = curCursor.fetchall()
+        #for i in range(512, 1024):
+        #    print('i and chr: ', i, chr(i))
+        #self.browseWindow = Toplevel()  #SJ4280422 - No need this, do it inside the class itself
+        self.browseTable = SJTable(master, 3, 2)
+
     #SJ2220222 - Setup connection to wershipping database
     def setupSQLiteDBase(self, dbName):
         global conn
@@ -432,6 +458,69 @@ class WER_Main:
             print('Fail to connect to database')
             quitter_function()
 
+#SJ1250422 - This class prompts user for a date and return the date to the calling function
+class selectDateDialog:
+    def __init__(self, master):
+        self.dateDialog = Toplevel(master)
+        self.fromDate = '0'
+        #SJ1250422 - Input field for Date received
+        self.todayDate = datetime(1,1,1).now()  #SJ1250422 - Getting today system date
+        self.dateReceivedLabel = Label(self.dateDialog, text='Please select the date you wish to browse the record from').grid(row=2, column=1)
+        self.dateReceived = DateEntry(self.dateDialog, values="Text", year=self.todayDate.year, state="readonly", date_pattern="yyyy-mm-dd")
+        self.dateReceived.grid(row=4, column=1, padx=20, pady=5, sticky=W)
+
+        self.okButton = Button(self.dateDialog, text="Ok", command = self.okCallback)
+        self.okButton.grid(row=4, column=2)
+
+    def okCallback(self):
+        self.fromDate = self.dateReceived.get_date()
+        self.dateDialog.destroy()
+
+    def getFromDate(self):
+        return (self.fromDate)
+
+#SJ6230422 - Class to create table
+class SJTable:
+    def __init__(self, master, numOfRow, numOfCol):
+        self.browseTable = Toplevel(master)
+        self.entryFields = [[0 for x in range(numOfCol)] for y in range(numOfRow)]
+        self.rowNumber = 2
+        #self.label = Label(master, text='Records Browser')
+        #self.label.grid(row=0, column=0)
+        # code for creating table
+        for i in range(numOfRow):
+            for j in range(numOfCol):
+                self.e = Entry(self.browseTable, width=20, fg='blue', font=('Arial',16,'bold'))
+                self.e.grid(row=self.rowNumber+i, column=1+j)
+                self.entryFields[i][j] = self.e
+                #self.e.insert(END, lst[i][j])
+
+        #self.rowNumber += numOfRow;
+        #print('entryField ', self.entryFields)
+        #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
+        self.upButton = Button(self.browseTable, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
+        self.upButton.grid(row=self.rowNumber, column=0)
+        self.cancelButton = Button(self.browseTable, text='Cancel', command=lambda x=self.browseTable: self.cancelButtonCallback(x))
+        self.cancelButton.grid(row=self.rowNumber, column=numOfCol+1)
+        self.rowNumber += 1
+
+        self.downButton = Button(self.browseTable, text='V', command=lambda x=self.browseTable: self.downButtonCallback(x))
+        self.downButton.grid(row=self.rowNumber, column=0)
+        self.selectButton = Button(self.browseTable, text='Select', command=lambda x=self.browseTable: self.selectButtonCallback(x))
+        self.selectButton.grid(row=self.rowNumber, column=numOfCol+1)
+        self.rowNumber += 1
+
+    def cancelButtonCallback(self, master):
+        pass
+
+    def upButtonCallback(self, master):
+        pass
+
+    def downButtonCallback(self, master):
+        pass
+
+    def selectButtonCallback(self, master):
+        pass
 
 def quitter_function():
     conn.close()  #SJ5250222 - Close database connection
