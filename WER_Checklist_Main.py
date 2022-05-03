@@ -117,7 +117,7 @@ class WER_Main:
         master.title('West End Radiators')
         self.setupDataEntryScreen(master)
         self.setupSQLiteDBase('./dbase/werShipping.sqlite')
-        self.sjDate = 0  #SJ1250422 - Created to accept date from date dialog
+        #self.sjDate = 0  #SJ1250422 - Created to accept date from date dialog
 
     def setupDataEntryScreen(self, master):
         global customerName
@@ -431,20 +431,57 @@ class WER_Main:
     def browseCallback(self, master):
         global conn
         global curCursor
-        self.fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
+        fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
+        toDate = ''
+        self.numOfRow = 5
+        self.numOfCol = 2
+        #self.startRow = 2
+        self.curRowNumber = self.startRow = 2
 
-        self.inputDate = selectDateDialog(master)
-        master.wait_window(self.inputDate.dateDialog)
-        self.fromDate = self.inputDate.getFromDate()
-        print('Return from selectDateDialog: ', self.fromDate)
+        inputDate = selectDateDialog(master)
+        master.wait_window(inputDate.dateDialog)
+        fromDate = str(inputDate.getFromDate())
+        toDate = fromDate[:5]+str(int(fromDate[5:7])+1).zfill(2)+'-01'  #SJ1020522 - This computes to first day of the next month
+        #print('Return from selectDateDialog: ', fromDate, toDate)
 
-        #curCursor.execute('SELECT workOrder, customerName FROM werChecklist WHERE dateReceived = ?', [self.fromDate])
-        #curCursor.execute('SELECT workOrder, customerName FROM werChecklist WHERE dateReceived = ?', (self.fromDate,))
-        #self.recData = curCursor.fetchall()
-        #for i in range(512, 1024):
-        #    print('i and chr: ', i, chr(i))
-        #self.browseWindow = Toplevel()  #SJ4280422 - No need this, do it inside the class itself
-        self.browseTable = SJTable(master, 3, 2)
+        #curCursor.execute('SELECT customerName, workOrder FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', [fromDate])
+        curCursor.execute('SELECT customerName, workOrder FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', (fromDate, toDate))
+        recData = curCursor.fetchall()  #SJ0010522 - if use fetchall check using len
+        #recData = curCursor.fetchone()  #SJ0010522 - if use fetchone can use None to check
+        if len(recData) == 0:
+            showwarning(title='No Records Found', message='No records that match your input date.')
+            print('recData ', recData)
+        else:
+            print('recData ', recData)
+            #for i in range(512, 1024):
+            #    print('i and chr: ', i, chr(i))
+            self.browseWindow = Toplevel()
+            self.browseTable = SJTable(self.browseWindow, self.numOfRow, self.numOfCol)
+
+            #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
+            self.upButton = Button(self.browseWindow, text=str(chr(923)), command=lambda x=self.browseWindow: self.upButtonCallback(x))
+            self.upButton.grid(row=self.curRowNumber, column=0)
+            self.cancelButton = Button(self.browseWindow, text='Cancel', command=lambda x=self.browseWindow: self.cancelButtonCallback(x))
+            self.cancelButton.grid(row=self.curRowNumber, column=2+1)
+            self.curRowNumber += 1
+
+            self.downButton = Button(self.browseWindow, text='V', command=lambda x=self.browseWindow: self.downButtonCallback(x))
+            self.downButton.grid(row=self.curRowNumber, column=0)
+            self.selectButton = Button(self.browseWindow, text='Select', command=lambda x=self.browseWindow: self.selectButtonCallback(x))
+            self.selectButton.grid(row=self.curRowNumber, column=2+1)
+            #self.curRowNumber += 1
+
+    def cancelButtonCallback(self, master):
+        pass
+
+    def upButtonCallback(self, master):
+        pass
+
+    def downButtonCallback(self, master):
+        pass
+
+    def selectButtonCallback(self, master):
+        pass
 
     #SJ2220222 - Setup connection to wershipping database
     def setupSQLiteDBase(self, dbName):
@@ -482,7 +519,7 @@ class selectDateDialog:
 #SJ6230422 - Class to create table
 class SJTable:
     def __init__(self, master, numOfRow, numOfCol):
-        self.browseTable = Toplevel(master)
+        self.browseTable = master #Toplevel(master)
         self.entryFields = [[0 for x in range(numOfCol)] for y in range(numOfRow)]
         self.rowNumber = 2
         #self.label = Label(master, text='Records Browser')
@@ -498,29 +535,29 @@ class SJTable:
         #self.rowNumber += numOfRow;
         #print('entryField ', self.entryFields)
         #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
-        self.upButton = Button(self.browseTable, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
-        self.upButton.grid(row=self.rowNumber, column=0)
-        self.cancelButton = Button(self.browseTable, text='Cancel', command=lambda x=self.browseTable: self.cancelButtonCallback(x))
-        self.cancelButton.grid(row=self.rowNumber, column=numOfCol+1)
-        self.rowNumber += 1
+        #self.upButton = Button(self.browseTable, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
+        #self.upButton.grid(row=self.rowNumber, column=0)
+        #self.cancelButton = Button(self.browseTable, text='Cancel', command=lambda x=self.browseTable: self.cancelButtonCallback(x))
+        #self.cancelButton.grid(row=self.rowNumber, column=numOfCol+1)
+        #self.rowNumber += 1
 
-        self.downButton = Button(self.browseTable, text='V', command=lambda x=self.browseTable: self.downButtonCallback(x))
-        self.downButton.grid(row=self.rowNumber, column=0)
-        self.selectButton = Button(self.browseTable, text='Select', command=lambda x=self.browseTable: self.selectButtonCallback(x))
-        self.selectButton.grid(row=self.rowNumber, column=numOfCol+1)
-        self.rowNumber += 1
+        #self.downButton = Button(self.browseTable, text='V', command=lambda x=self.browseTable: self.downButtonCallback(x))
+        #self.downButton.grid(row=self.rowNumber, column=0)
+        #self.selectButton = Button(self.browseTable, text='Select', command=lambda x=self.browseTable: self.selectButtonCallback(x))
+        #self.selectButton.grid(row=self.rowNumber, column=numOfCol+1)
+        #self.rowNumber += 1
 
-    def cancelButtonCallback(self, master):
-        pass
+    #def cancelButtonCallback(self, master):
+        #pass
 
-    def upButtonCallback(self, master):
-        pass
+    #def upButtonCallback(self, master):
+        #pass
 
-    def downButtonCallback(self, master):
-        pass
+    #def downButtonCallback(self, master):
+        #pass
 
-    def selectButtonCallback(self, master):
-        pass
+    #def selectButtonCallback(self, master):
+        #pass
 
 def quitter_function():
     conn.close()  #SJ5250222 - Close database connection
