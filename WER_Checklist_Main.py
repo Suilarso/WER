@@ -433,8 +433,9 @@ class WER_Main:
         global curCursor
         fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
         toDate = ''
-        self.numOfRow = 5
-        self.numOfCol = 2
+        totalRecords = 0
+        numOfRow = 5
+        numOfCol = 3
         #self.startRow = 2
         self.curRowNumber = self.startRow = 2
 
@@ -445,31 +446,34 @@ class WER_Main:
         #print('Return from selectDateDialog: ', fromDate, toDate)
 
         #curCursor.execute('SELECT customerName, workOrder FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', [fromDate])
-        curCursor.execute('SELECT customerName, workOrder FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', (fromDate, toDate))
+        curCursor.execute('SELECT workOrder, customerName, dateReceived FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', (fromDate, toDate))
         recData = curCursor.fetchall()  #SJ0010522 - if use fetchall check using len
         #recData = curCursor.fetchone()  #SJ0010522 - if use fetchone can use None to check
-        if len(recData) == 0:
+        totalRecords = len(recData)
+        if totalRecords == 0:
             showwarning(title='No Records Found', message='No records that match your input date.')
-            print('recData ', recData)
+            #print('recData ', recData)
         else:
-            print('recData ', recData)
+            print('recData ', totalRecords, recData)
             #for i in range(512, 1024):
             #    print('i and chr: ', i, chr(i))
             self.browseWindow = Toplevel()
-            self.browseTable = SJTable(self.browseWindow, self.numOfRow, self.numOfCol)
+            self.browseTable = SJTable(self.browseWindow, numOfRow, numOfCol)
 
             #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
             self.upButton = Button(self.browseWindow, text=str(chr(923)), command=lambda x=self.browseWindow: self.upButtonCallback(x))
             self.upButton.grid(row=self.curRowNumber, column=0)
             self.cancelButton = Button(self.browseWindow, text='Cancel', command=lambda x=self.browseWindow: self.cancelButtonCallback(x))
-            self.cancelButton.grid(row=self.curRowNumber, column=2+1)
+            self.cancelButton.grid(row=self.curRowNumber, column=numOfCol+1)
             self.curRowNumber += 1
 
             self.downButton = Button(self.browseWindow, text='V', command=lambda x=self.browseWindow: self.downButtonCallback(x))
             self.downButton.grid(row=self.curRowNumber, column=0)
             self.selectButton = Button(self.browseWindow, text='Select', command=lambda x=self.browseWindow: self.selectButtonCallback(x))
-            self.selectButton.grid(row=self.curRowNumber, column=2+1)
+            self.selectButton.grid(row=self.curRowNumber, column=numOfCol+1)
             #self.curRowNumber += 1
+            for i in range(numOfRow):
+                self.browseTable.addRowOfData(i, recData[i])
 
     def cancelButtonCallback(self, master):
         pass
@@ -534,30 +538,20 @@ class SJTable:
 
         #self.rowNumber += numOfRow;
         #print('entryField ', self.entryFields)
-        #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
-        #self.upButton = Button(self.browseTable, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
-        #self.upButton.grid(row=self.rowNumber, column=0)
-        #self.cancelButton = Button(self.browseTable, text='Cancel', command=lambda x=self.browseTable: self.cancelButtonCallback(x))
-        #self.cancelButton.grid(row=self.rowNumber, column=numOfCol+1)
-        #self.rowNumber += 1
 
-        #self.downButton = Button(self.browseTable, text='V', command=lambda x=self.browseTable: self.downButtonCallback(x))
-        #self.downButton.grid(row=self.rowNumber, column=0)
-        #self.selectButton = Button(self.browseTable, text='Select', command=lambda x=self.browseTable: self.selectButtonCallback(x))
-        #self.selectButton.grid(row=self.rowNumber, column=numOfCol+1)
-        #self.rowNumber += 1
+    def addRowOfData(self, rowNumber, recData):
+        #SJ2030522 - seq of input data: workOrder, customerName, dateReceived
+        #self.browseTable
+        #workOrder.insert(self.browseTable, 0, returnRow[werStructure['workOrder']])
+        #customerName.insert(0, returnRow[werStructure['customerName']])
+        #customerName.configure(state=DISABLED)
+        #dateReceived.set_date(returnRow[werStructure['dateReceived']])
+        #dateReceived.configure(state=DISABLED)
+        self.entryFields[rowNumber][0].insert(0, recData[0])
+        self.entryFields[rowNumber][1].insert(0, recData[1])
+        #self.entryFields[rowNumber][2].set_date(recData[2])
+        self.entryFields[rowNumber][2].insert(0, recData[2])
 
-    #def cancelButtonCallback(self, master):
-        #pass
-
-    #def upButtonCallback(self, master):
-        #pass
-
-    #def downButtonCallback(self, master):
-        #pass
-
-    #def selectButtonCallback(self, master):
-        #pass
 
 def quitter_function():
     conn.close()  #SJ5250222 - Close database connection
