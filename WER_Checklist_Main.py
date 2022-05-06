@@ -485,6 +485,7 @@ class WER_Main:
         pass
 
     def selectButtonCallback(self, master):
+        master.destroy()
         pass
 
     #SJ2220222 - Setup connection to wershipping database
@@ -520,6 +521,9 @@ class selectDateDialog:
     def getFromDate(self):
         return (self.fromDate)
 
+    def __del__(self):
+        print('Destructor for selectDateDialog')
+
 #SJ6230422 - Class to create table
 class SJTable:
     def __init__(self, master, numOfRow, numOfCol):
@@ -531,10 +535,10 @@ class SJTable:
         # code for creating table
         for i in range(numOfRow):
             for j in range(numOfCol):
-                self.e = Entry(self.browseTable, width=20, fg='blue', font=('Arial',16,'bold'))
+                #self.e = Entry(self.browseTable, width=20, fg='blue', font=('Arial',16,'bold'))
+                self.e = Entry(self.browseTable, width=20, fg='black', font=('Arial',12))
                 self.e.grid(row=self.rowNumber+i, column=1+j)
                 self.entryFields[i][j] = self.e
-                #self.e.insert(END, lst[i][j])
 
         #self.rowNumber += numOfRow;
         #print('entryField ', self.entryFields)
@@ -542,16 +546,17 @@ class SJTable:
     def addRowOfData(self, rowNumber, recData):
         #SJ2030522 - seq of input data: workOrder, customerName, dateReceived
         #self.browseTable
-        #workOrder.insert(self.browseTable, 0, returnRow[werStructure['workOrder']])
-        #customerName.insert(0, returnRow[werStructure['customerName']])
-        #customerName.configure(state=DISABLED)
-        #dateReceived.set_date(returnRow[werStructure['dateReceived']])
-        #dateReceived.configure(state=DISABLED)
         self.entryFields[rowNumber][0].insert(0, recData[0])
+        self.entryFields[rowNumber][0].configure(state=DISABLED)
         self.entryFields[rowNumber][1].insert(0, recData[1])
+        self.entryFields[rowNumber][1].configure(state=DISABLED)
         #self.entryFields[rowNumber][2].set_date(recData[2])
         self.entryFields[rowNumber][2].insert(0, recData[2])
+        self.entryFields[rowNumber][2].configure(state=DISABLED)
 
+    def __del__(self):
+        #SJ4050522 - Need to add code to call destroy() method
+        print('Destructor for SJTable')
 
 def quitter_function():
     conn.close()  #SJ5250222 - Close database connection
