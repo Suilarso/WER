@@ -104,6 +104,12 @@ qcCheckedBy = ''
 notes = ''
 qcCheckFlag = False
 
+#SJ6070522 - Global var for table movement
+totalRecords = 0
+numOfRow = 0
+numOfCol = 0
+currentRecord = 0
+
 #SJ3230222 - database and table global variables
 conn = ''
 curCursor = ''
@@ -431,11 +437,17 @@ class WER_Main:
     def browseCallback(self, master):
         global conn
         global curCursor
-        fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
-        toDate = ''
-        totalRecords = 0
+        global totalRecords
+        global numOfRow
+        global numOfCol
+        global currentRecord
+
         numOfRow = 5
         numOfCol = 3
+        currentRecord = 0  #SJ1090522 - valid value = 0 to numOfRow - 1
+        fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
+        toDate = ''
+
         #self.startRow = 2
         self.curRowNumber = self.startRow = 2
 
@@ -461,27 +473,61 @@ class WER_Main:
             self.browseTable = SJTable(self.browseWindow, numOfRow, numOfCol)
 
             #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
-            self.upButton = Button(self.browseWindow, text=str(chr(923)), command=lambda x=self.browseWindow: self.upButtonCallback(x))
+            self.upButton = Button(self.browseWindow, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
             self.upButton.grid(row=self.curRowNumber, column=0)
             self.cancelButton = Button(self.browseWindow, text='Cancel', command=lambda x=self.browseWindow: self.cancelButtonCallback(x))
             self.cancelButton.grid(row=self.curRowNumber, column=numOfCol+1)
             self.curRowNumber += 1
 
-            self.downButton = Button(self.browseWindow, text='V', command=lambda x=self.browseWindow: self.downButtonCallback(x))
+            self.downButton = Button(self.browseWindow, text='V', command=lambda x=self.browseTable: self.downButtonCallback(x))
             self.downButton.grid(row=self.curRowNumber, column=0)
             self.selectButton = Button(self.browseWindow, text='Select', command=lambda x=self.browseWindow: self.selectButtonCallback(x))
             self.selectButton.grid(row=self.curRowNumber, column=numOfCol+1)
-            #self.curRowNumber += 1
+            self.curRowNumber += 1
+
+            self.prevPageButton = Button(self.browseWindow, text=str(chr(171)), command=lambda x=self.browseTable: self.prevPageButtonCallback(x))
+            #self.prevPageButton = Button(self.browseWindow, text='<<', command=lambda x=self.browseTable: self.prevPageButtonCallback(x))
+            self.prevPageButton.grid(row=self.curRowNumber, column=0)
+            self.curRowNumber += 1
+            self.nextPageButton = Button(self.browseWindow, text=str(chr(187)), command=lambda x=self.browseTable: self.nextPageButtonCallback(x))
+            #self.nextPageButton = Button(self.browseWindow, text='>>', command=lambda x=self.browseTable: self.nextPageButtonCallback(x))
+            self.nextPageButton.grid(row=self.curRowNumber, column=0)
+
             for i in range(numOfRow):
                 self.browseTable.addRowOfData(i, recData[i])
 
+            self.browseTable.highlightRow(0, numOfCol)
+
+    def upButtonCallback(self, browseTable):
+        global numOfCol
+        global currentRecord
+        #SJ1090522 - Can only move up if currentRecord is not pointing to first record of the table
+        if currentRecord > 0:
+            browseTable.deHighlightRow(currentRecord, numOfCol)
+            currentRecord -= 1
+            browseTable.highlightRow(currentRecord, numOfCol)
+        else:
+            pass
+
+    def downButtonCallback(self, browseTable):
+        global numOfRow
+        global numOfCol
+        global currentRecord
+        #SJ1090522 - Can only move down if currentRecord is not pointing to the last record of the table
+        if currentRecord < (numOfRow - 1):
+            browseTable.deHighlightRow(currentRecord, numOfCol)
+            currentRecord += 1
+            browseTable.highlightRow(currentRecord, numOfCol)
+        else:
+            pass
+
+    def prevPageButtonCallback(self, browseTable):
+        pass
+
+    def nextPageButtonCallback(self, browseTable):
+        pass
+
     def cancelButtonCallback(self, master):
-        pass
-
-    def upButtonCallback(self, master):
-        pass
-
-    def downButtonCallback(self, master):
         pass
 
     def selectButtonCallback(self, master):
@@ -553,6 +599,14 @@ class SJTable:
         #self.entryFields[rowNumber][2].set_date(recData[2])
         self.entryFields[rowNumber][2].insert(0, recData[2])
         self.entryFields[rowNumber][2].configure(state=DISABLED)
+
+    def highlightRow(self, rowNumber, numOfCol):
+        for i in range(numOfCol):
+            self.entryFields[rowNumber][i].configure(state=NORMAL, bg='green')  #'#A202FF'
+
+    def deHighlightRow(self, rowNumber, numOfCol):
+        for i in range(numOfCol):
+            self.entryFields[rowNumber][i].configure(state=DISABLED)
 
     def __del__(self):
         #SJ4050522 - Need to add code to call destroy() method
