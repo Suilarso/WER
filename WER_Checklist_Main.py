@@ -106,9 +106,12 @@ qcCheckFlag = False
 
 #SJ6070522 - Global var for table movement
 totalRecords = 0
+rowsPerPage = 5
 numOfRow = 0
 numOfCol = 0
 currentRecord = 0
+pageFirstRecord = -1
+totalRecordsBrowsed = 0
 
 #SJ3230222 - database and table global variables
 conn = ''
@@ -438,13 +441,15 @@ class WER_Main:
         global conn
         global curCursor
         global totalRecords
+        global rowsPerPage
         global numOfRow
         global numOfCol
         global currentRecord
+        global pageFirstRecord
+        global totalRecordsBrowsed
 
-        numOfRow = 5
+        #numOfRow = 5  #SJ2100522 - Don't initialise here as it will be computed based on availabel records to display
         numOfCol = 3
-        currentRecord = 0  #SJ1090522 - valid value = 0 to numOfRow - 1
         fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
         toDate = ''
 
@@ -470,7 +475,7 @@ class WER_Main:
             #for i in range(512, 1024):
             #    print('i and chr: ', i, chr(i))
             self.browseWindow = Toplevel()
-            self.browseTable = SJTable(self.browseWindow, numOfRow, numOfCol)
+            self.browseTable = SJTable(self.browseWindow, rowsPerPage, numOfCol)
 
             #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
             self.upButton = Button(self.browseWindow, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
@@ -485,18 +490,25 @@ class WER_Main:
             self.selectButton.grid(row=self.curRowNumber, column=numOfCol+1)
             self.curRowNumber += 1
 
-            self.prevPageButton = Button(self.browseWindow, text=str(chr(171)), command=lambda x=self.browseTable: self.prevPageButtonCallback(x))
+            self.prevPageButton = Button(self.browseWindow, text=str(chr(171)), command=lambda x=self.browseTable, y=recData: self.prevPageButtonCallback(x, y))
             #self.prevPageButton = Button(self.browseWindow, text='<<', command=lambda x=self.browseTable: self.prevPageButtonCallback(x))
             self.prevPageButton.grid(row=self.curRowNumber, column=0)
             self.curRowNumber += 1
-            self.nextPageButton = Button(self.browseWindow, text=str(chr(187)), command=lambda x=self.browseTable: self.nextPageButtonCallback(x))
+            self.nextPageButton = Button(self.browseWindow, text=str(chr(187)), command=lambda x=self.browseTable, y=recData: self.nextPageButtonCallback(x, y))
             #self.nextPageButton = Button(self.browseWindow, text='>>', command=lambda x=self.browseTable: self.nextPageButtonCallback(x))
             self.nextPageButton.grid(row=self.curRowNumber, column=0)
+
+            numOfRow = rowsPerPage if totalRecords >= rowsPerPage else totalRecords
+            currentRecord = 0  #SJ1090522 - valid value = 0 to numOfRow - 1
+            pageFirstRecord = 0  #SJ2100522 - 0 being the first record of the total searched records
+            #self.availRecord = totalRecords - pageFirstRecord
+            totalRecordsBrowsed += numOfRow
+            print('numOfRow, pageFirstRecord, totalRecordsBrowsed: ', numOfRow, pageFirstRecord, totalRecordsBrowsed)
 
             for i in range(numOfRow):
                 self.browseTable.addRowOfData(i, recData[i])
 
-            self.browseTable.highlightRow(0, numOfCol)
+            self.browseTable.highlightRow(currentRecord, numOfCol)
 
     def upButtonCallback(self, browseTable):
         global numOfCol
@@ -521,11 +533,48 @@ class WER_Main:
         else:
             pass
 
-    def prevPageButtonCallback(self, browseTable):
+    def prevPageButtonCallback(self, browseTable, recData):
+        global totalRecords
+        global numOfRow
+        global numOfCol
+        global currentRecord
+        global pageFirstRecord
         pass
 
-    def nextPageButtonCallback(self, browseTable):
-        pass
+    def nextPageButtonCallback(self, browseTable, recData):
+        global totalRecords
+        global rowsPerPage
+        global numOfRow
+        global numOfCol
+        global currentRecord
+        global pageFirstRecord
+        global totalRecordsBrowsed
+
+        #SJ2100522 - Computer how many records left available for display
+        self.availRecord = totalRecords - totalRecordsBrowsed
+        if self.availRecord == 0:
+            #SJ4120522 - If comes here, means no more records available for browsing
+            #pass
+            return
+        elif self.availRecord >= rowsPerPage:
+            #SJ4120522 - If comes here, means there are still full page of records to be displayed
+            currentRecord = 0
+            numOfRow = rowsPerPage
+            pageFirstRecord += rowsPerPage
+            totalRecordsBrowsed += numOfRow
+        else:
+            #SJ4120522 - If comes here, means not a full page of records to be displayed
+            currentRecord = 0
+            numOfRow = self.availRecord
+            pageFirstRecord += rowsPerPage
+            totalRecordsBrowsed += numOfRow
+
+        print('currentRecord, numOfRow, pageFirstRecord, totalRecordsBrowsed: ', currentRecord, numOfRow, pageFirstRecord, totalRecordsBrowsed)
+        #SJ412-522 - Clear table before populating the table with new page of data
+        self.browseTable.clearTable(rowsPerPage, numOfCol)
+        for i in range(numOfRow):
+            self.browseTable.addRowOfData(i, recData[pageFirstRecord + i])
+        self.browseTable.highlightRow(currentRecord, numOfCol)
 
     def cancelButtonCallback(self, master):
         pass
@@ -607,6 +656,12 @@ class SJTable:
     def deHighlightRow(self, rowNumber, numOfCol):
         for i in range(numOfCol):
             self.entryFields[rowNumber][i].configure(state=DISABLED)
+
+    def clearTable(self, numOfRow, numOfCol):
+        for i in range(numOfRow):
+            for j in range(numOfCol):
+                self.entryFields[i][j].configure(state=NORMAL, bg='white')
+                self.entryFields[i][j].delete(0, END)
 
     def __del__(self):
         #SJ4050522 - Need to add code to call destroy() method
