@@ -31,6 +31,14 @@ Click on 'Save' button to save the entry or 'Cancel' button to cancel the entry 
 To QC check a work order
 Key in the work order in 'WO' field and follow by a click on 'Search' button. If the work order had not been qc checked already, the 'QC Check' button will be enabled. Click on the 'QC Check' button and key in the initial of the individual who did the qc check and follow by a click on the 'Update' button.
 
+To browse Records
+Click on 'Browse' button and from the input date dialog that appeared, select the start date you wish to browse the records.
+Once the start date had been selected, click 'Ok' button and the browse module will return the next 14 days of records it
+can find.
+Click on up and down marker to move record selection up and down respectively.
+To move from page to page, click on the previous and next page markers respectively.
+To see the record details, highlight the record you wish to see and click on the 'Select' button.
+
 Bug report
 Mar 1, 22 - Product type and part list not re-display properly
 Bug found on product type: For product selection from Coolant Pipe onward, will be saved into sql correctly, but will not be re-displayed correctly during search operation.
