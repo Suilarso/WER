@@ -110,7 +110,9 @@ rowsPerPage = 5
 numOfRow = 0
 numOfCol = 0
 currentRecord = 0
-pageFirstRecord = -1
+currentPage = 0
+#pageFirstRecord = -1
+pageFirstRecord = []
 totalRecordsBrowsed = 0
 
 #SJ3230222 - database and table global variables
@@ -445,6 +447,7 @@ class WER_Main:
         global numOfRow
         global numOfCol
         global currentRecord
+        global currentPage
         global pageFirstRecord
         global totalRecordsBrowsed
 
@@ -498,10 +501,16 @@ class WER_Main:
             #self.nextPageButton = Button(self.browseWindow, text='>>', command=lambda x=self.browseTable: self.nextPageButtonCallback(x))
             self.nextPageButton.grid(row=self.curRowNumber, column=0)
 
+            #SJ5130522 - re-intialize global var
+            if (len(pageFirstRecord) != 0):
+                print('clear pageFirstRecord...')
+                del pageFirstRecord[:]
+            totalRecordsBrowsed = 0
+
             numOfRow = rowsPerPage if totalRecords >= rowsPerPage else totalRecords
             currentRecord = 0  #SJ1090522 - valid value = 0 to numOfRow - 1
-            pageFirstRecord = 0  #SJ2100522 - 0 being the first record of the total searched records
-            #self.availRecord = totalRecords - pageFirstRecord
+            currentPage = 0  #SJ5130522 - First page of records
+            pageFirstRecord.append(0)  #SJ2100522 - 0 being the first record of the total searched records
             totalRecordsBrowsed += numOfRow
             print('numOfRow, pageFirstRecord, totalRecordsBrowsed: ', numOfRow, pageFirstRecord, totalRecordsBrowsed)
 
@@ -534,12 +543,31 @@ class WER_Main:
             pass
 
     def prevPageButtonCallback(self, browseTable, recData):
-        global totalRecords
+        #global totalRecords
+        global rowsPerPage
         global numOfRow
         global numOfCol
         global currentRecord
+        global currentPage
         global pageFirstRecord
-        pass
+        global totalRecordsBrowsed
+
+        #SJ5130522 - Can go back to previous page if only current page is beyond first page
+        if currentPage != 0:
+            del pageFirstRecord[currentPage]  #S5130522 - remove the first record of current page before going back to previous page
+            currentPage -= 1
+            totalRecordsBrowsed -= numOfRow
+            currentRecord = 0
+
+            #SJ412-522 - Clear table before populating the table with new page of data
+            self.browseTable.clearTable(numOfRow, numOfCol)
+            numOfRow = rowsPerPage
+            for i in range(numOfRow):
+                self.browseTable.addRowOfData(i, recData[pageFirstRecord[currentPage] + i])
+            self.browseTable.highlightRow(currentRecord, numOfCol)
+
+        print('currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed: ',
+               currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed)
 
     def nextPageButtonCallback(self, browseTable, recData):
         global totalRecords
@@ -547,6 +575,7 @@ class WER_Main:
         global numOfRow
         global numOfCol
         global currentRecord
+        global currentPage
         global pageFirstRecord
         global totalRecordsBrowsed
 
@@ -554,27 +583,25 @@ class WER_Main:
         self.availRecord = totalRecords - totalRecordsBrowsed
         if self.availRecord == 0:
             #SJ4120522 - If comes here, means no more records available for browsing
-            #pass
-            return
-        elif self.availRecord >= rowsPerPage:
-            #SJ4120522 - If comes here, means there are still full page of records to be displayed
-            currentRecord = 0
-            numOfRow = rowsPerPage
-            pageFirstRecord += rowsPerPage
-            totalRecordsBrowsed += numOfRow
+            pass
+            #return
         else:
-            #SJ4120522 - If comes here, means not a full page of records to be displayed
+            #SJ4120522 - If comes here, means there are still records to be displayed
             currentRecord = 0
-            numOfRow = self.availRecord
-            pageFirstRecord += rowsPerPage
+            #numOfRow = rowsPerPage
+            numOfRow = rowsPerPage if self.availRecord >= rowsPerPage else self.availRecord
+            pageFirstRecord.append(pageFirstRecord[currentPage] + rowsPerPage)
+            currentPage += 1
             totalRecordsBrowsed += numOfRow
 
-        print('currentRecord, numOfRow, pageFirstRecord, totalRecordsBrowsed: ', currentRecord, numOfRow, pageFirstRecord, totalRecordsBrowsed)
-        #SJ412-522 - Clear table before populating the table with new page of data
-        self.browseTable.clearTable(rowsPerPage, numOfCol)
-        for i in range(numOfRow):
-            self.browseTable.addRowOfData(i, recData[pageFirstRecord + i])
-        self.browseTable.highlightRow(currentRecord, numOfCol)
+            #SJ412-522 - Clear table before populating the table with new page of data
+            self.browseTable.clearTable(rowsPerPage, numOfCol)
+            for i in range(numOfRow):
+                self.browseTable.addRowOfData(i, recData[pageFirstRecord[currentPage] + i])
+            self.browseTable.highlightRow(currentRecord, numOfCol)
+
+            print('currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed: ',
+                   currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed)
 
     def cancelButtonCallback(self, master):
         pass
