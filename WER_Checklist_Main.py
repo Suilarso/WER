@@ -456,14 +456,13 @@ class WER_Main:
         fromDate = datetime(1,1,1).now()  #SJ2260422 - Default to today date
         toDate = ''
 
-        #self.startRow = 2
         self.curRowNumber = self.startRow = 2
 
         inputDate = selectDateDialog(master)
         master.wait_window(inputDate.dateDialog)
         fromDate = str(inputDate.getFromDate())
-        toDate = fromDate[:5]+str(int(fromDate[5:7])+1).zfill(2)+'-01'  #SJ1020522 - This computes to first day of the next month
-        #print('Return from selectDateDialog: ', fromDate, toDate)
+        #toDate = fromDate[:5]+str(int(fromDate[5:7])+1).zfill(2)+'-01'  #SJ1020522 - This computes to first day of the next month
+        toDate = self.computeToDate(fromDate)
 
         #curCursor.execute('SELECT customerName, workOrder FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', [fromDate])
         curCursor.execute('SELECT workOrder, customerName, dateReceived FROM werChecklist WHERE dateReceived >= ? AND dateReceived < ?', (fromDate, toDate))
@@ -472,7 +471,6 @@ class WER_Main:
         totalRecords = len(recData)
         if totalRecords == 0:
             showwarning(title='No Records Found', message='No records that match your input date.')
-            #print('recData ', recData)
         else:
             print('recData ', totalRecords, recData)
             #for i in range(512, 1024):
@@ -518,6 +516,35 @@ class WER_Main:
                 self.browseTable.addRowOfData(i, recData[i])
 
             self.browseTable.highlightRow(currentRecord, numOfCol)
+
+    def computeToDate(self, fromDate):
+        try:
+            self.year = int(fromDate[:4])
+            self.month = int(fromDate[5:7])
+            self.day = int(fromDate[8:])
+            self.newDay = self.day + 14
+
+            #SJ6140522 - If comes to any of this if else, the next 14 days extend to the next month
+            if (self.newDay > 31 and self.month in [1, 3, 5, 7, 8, 10, 12]):
+                self.newDay -= 31
+                if (self.month == 12):
+                    self.year += 1
+                    self.month = 1
+                else:
+                    self.month += 1
+            elif (self.newDay > 30 and self.month in [4, 6, 9, 11]):
+                self.newDay -= 30
+                self.month += 1
+            elif (self.newDay > 28 and self.month == 2):  #SJ6140522 - Here we ignore leap year
+                self.newDay -= 28
+                self.month += 1
+            self.toDate = str(self.year)+'-'+str(self.month).zfill(2)+'-'+str(self.newDay).zfill(2)
+        except:
+            fromDate = str(datetime(1,1,1).now())
+            self.toDate = fromDate[:5]+str(int(fromDate[5:7])).zfill(2)+'-28'
+
+        print('computeToDate ', self.year, self.month, self.day, self.toDate)
+        return(self.toDate)
 
     def upButtonCallback(self, browseTable):
         global numOfCol
