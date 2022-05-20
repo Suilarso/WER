@@ -111,7 +111,6 @@ numOfRow = 0
 numOfCol = 0
 currentRecord = 0
 currentPage = 0
-#pageFirstRecord = -1
 pageFirstRecord = []
 totalRecordsBrowsed = 0
 
@@ -128,7 +127,6 @@ class WER_Main:
         master.title('West End Radiators')
         self.setupDataEntryScreen(master)
         self.setupSQLiteDBase('./dbase/werShipping.sqlite')
-        #self.sjDate = 0  #SJ1250422 - Created to accept date from date dialog
 
     def setupDataEntryScreen(self, master):
         global customerName
@@ -277,12 +275,18 @@ class WER_Main:
 
         #SJ6050322 - Put back all button functionality accordingly
         self.saveButton.configure(state=NORMAL)
+        self.browseButton.configure(state=NORMAL)
         self.qcCheckButton.configure(text='QC Check', state=DISABLED)
 
     #SJ0270222 - Search function to handle search button press
-    def searchCallback(self, master):
+    def searchCallback(self, master, optionalWorkOrder=0):
         global qcCheckFlag
-        self.workOrder = workOrder.get().strip()
+
+        if (optionalWorkOrder != 0):
+            self.workOrder = optionalWorkOrder.strip()
+        else:
+            self.workOrder = workOrder.get().strip()
+
         if len(self.workOrder) == 0:
             showwarning(title='Empty Fields', message='Please key in the WO to be searched')
         else:
@@ -329,6 +333,7 @@ class WER_Main:
                 notes.insert(END, returnRow[werStructure['notes']])
                 notes.configure(state=DISABLED)
                 self.saveButton.configure(state=DISABLED)
+                self.browseButton.configure(state=DISABLED)
             else:
                 showwarning(title='Record Not Found', message='Work order '+self.workOrder+' not found.')
 
@@ -387,7 +392,6 @@ class WER_Main:
 
     #SJ3130422 - This method verify input data validity
     def verifyInputData(self, master):
-        #global tableName  #SJ4210422 - doesn't seem to be in used
         global conn
         global curCursor
 
@@ -473,35 +477,33 @@ class WER_Main:
             showwarning(title='No Records Found', message='No records that match your input date.')
         else:
             print('recData ', totalRecords, recData)
-            #for i in range(512, 1024):
-            #    print('i and chr: ', i, chr(i))
+            self.browseButton.configure(state=DISABLED)
             self.browseWindow = Toplevel()
             self.browseTable = SJTable(self.browseWindow, rowsPerPage, numOfCol)
 
             #SJ6230422 - Use str(chr(923)) for up indicator and capital letter V for down indicator
             self.upButton = Button(self.browseWindow, text=str(chr(923)), command=lambda x=self.browseTable: self.upButtonCallback(x))
             self.upButton.grid(row=self.curRowNumber, column=0)
-            self.cancelButton = Button(self.browseWindow, text='Cancel', command=lambda x=self.browseWindow: self.cancelButtonCallback(x))
+            self.cancelButton = Button(self.browseWindow, text='Cancel', command=lambda x=self.browseWindow, y=self.browseTable:
+                                       self.cancelButtonCallback(x, y))
             self.cancelButton.grid(row=self.curRowNumber, column=numOfCol+1)
             self.curRowNumber += 1
 
             self.downButton = Button(self.browseWindow, text='V', command=lambda x=self.browseTable: self.downButtonCallback(x))
             self.downButton.grid(row=self.curRowNumber, column=0)
-            self.selectButton = Button(self.browseWindow, text='Select', command=lambda x=self.browseWindow: self.selectButtonCallback(x))
+            self.selectButton = Button(self.browseWindow, text='Select', command=lambda x=master, y=self.browseWindow, z=self.browseTable:
+                                       self.selectButtonCallback(x, y, z))
             self.selectButton.grid(row=self.curRowNumber, column=numOfCol+1)
             self.curRowNumber += 1
 
             self.prevPageButton = Button(self.browseWindow, text=str(chr(171)), command=lambda x=self.browseTable, y=recData: self.prevPageButtonCallback(x, y))
-            #self.prevPageButton = Button(self.browseWindow, text='<<', command=lambda x=self.browseTable: self.prevPageButtonCallback(x))
             self.prevPageButton.grid(row=self.curRowNumber, column=0)
             self.curRowNumber += 1
             self.nextPageButton = Button(self.browseWindow, text=str(chr(187)), command=lambda x=self.browseTable, y=recData: self.nextPageButtonCallback(x, y))
-            #self.nextPageButton = Button(self.browseWindow, text='>>', command=lambda x=self.browseTable: self.nextPageButtonCallback(x))
             self.nextPageButton.grid(row=self.curRowNumber, column=0)
 
             #SJ5130522 - re-intialize global var
             if (len(pageFirstRecord) != 0):
-                print('clear pageFirstRecord...')
                 del pageFirstRecord[:]
             totalRecordsBrowsed = 0
 
@@ -587,11 +589,11 @@ class WER_Main:
             currentRecord = 0
 
             #SJ412-522 - Clear table before populating the table with new page of data
-            self.browseTable.clearTable(numOfRow, numOfCol)
+            browseTable.clearTable(numOfRow, numOfCol)
             numOfRow = rowsPerPage
             for i in range(numOfRow):
-                self.browseTable.addRowOfData(i, recData[pageFirstRecord[currentPage] + i])
-            self.browseTable.highlightRow(currentRecord, numOfCol)
+                browseTable.addRowOfData(i, recData[pageFirstRecord[currentPage] + i])
+            browseTable.highlightRow(currentRecord, numOfCol)
 
         print('currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed: ',
                currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed)
@@ -615,27 +617,34 @@ class WER_Main:
         else:
             #SJ4120522 - If comes here, means there are still records to be displayed
             currentRecord = 0
-            #numOfRow = rowsPerPage
             numOfRow = rowsPerPage if self.availRecord >= rowsPerPage else self.availRecord
             pageFirstRecord.append(pageFirstRecord[currentPage] + rowsPerPage)
             currentPage += 1
             totalRecordsBrowsed += numOfRow
 
-            #SJ412-522 - Clear table before populating the table with new page of data
-            self.browseTable.clearTable(rowsPerPage, numOfCol)
+            #SJ4120522 - Clear table before populating the table with new page of data
+            browseTable.clearTable(rowsPerPage, numOfCol)
             for i in range(numOfRow):
-                self.browseTable.addRowOfData(i, recData[pageFirstRecord[currentPage] + i])
-            self.browseTable.highlightRow(currentRecord, numOfCol)
+                browseTable.addRowOfData(i, recData[pageFirstRecord[currentPage] + i])
+            browseTable.highlightRow(currentRecord, numOfCol)
 
             print('currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed: ',
                    currentPage, numOfRow, pageFirstRecord, totalRecordsBrowsed)
 
-    def cancelButtonCallback(self, master):
-        pass
+    def cancelButtonCallback(self, browseWindow, browseTable):
+        self.browseButton.configure(state=NORMAL)
+        del(browseTable)
+        browseWindow.destroy()
 
-    def selectButtonCallback(self, master):
-        master.destroy()
-        pass
+
+    def selectButtonCallback(self, masterWindow, browseWindow, browseTable):
+        global currentRecord
+        self.selectedWorkOrder = browseTable.getWorkOrder(currentRecord)
+        self.browseButton.configure(state=NORMAL)
+        del(browseTable)
+        browseWindow.destroy()
+        print('selectButtonCallback ', self.selectedWorkOrder)
+        self.searchCallback(masterWindow, self.selectedWorkOrder)
 
     #SJ2220222 - Setup connection to wershipping database
     def setupSQLiteDBase(self, dbName):
@@ -689,12 +698,8 @@ class SJTable:
                 self.e.grid(row=self.rowNumber+i, column=1+j)
                 self.entryFields[i][j] = self.e
 
-        #self.rowNumber += numOfRow;
-        #print('entryField ', self.entryFields)
-
     def addRowOfData(self, rowNumber, recData):
         #SJ2030522 - seq of input data: workOrder, customerName, dateReceived
-        #self.browseTable
         self.entryFields[rowNumber][0].insert(0, recData[0])
         self.entryFields[rowNumber][0].configure(state=DISABLED)
         self.entryFields[rowNumber][1].insert(0, recData[1])
@@ -716,6 +721,9 @@ class SJTable:
             for j in range(numOfCol):
                 self.entryFields[i][j].configure(state=NORMAL, bg='white')
                 self.entryFields[i][j].delete(0, END)
+
+    def getWorkOrder(self, currentRecord):
+        return (self.entryFields[currentRecord][0].get())
 
     def __del__(self):
         #SJ4050522 - Need to add code to call destroy() method
