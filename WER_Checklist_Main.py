@@ -545,7 +545,6 @@ class WER_Main:
             fromDate = str(datetime(1,1,1).now())
             self.toDate = fromDate[:5]+str(int(fromDate[5:7])).zfill(2)+'-28'
 
-        print('computeToDate ', self.year, self.month, self.day, self.toDate)
         return(self.toDate)
 
     def upButtonCallback(self, browseTable):
@@ -643,7 +642,7 @@ class WER_Main:
         self.browseButton.configure(state=NORMAL)
         del(browseTable)
         browseWindow.destroy()
-        print('selectButtonCallback ', self.selectedWorkOrder)
+        #print('selectButtonCallback ', self.selectedWorkOrder)
         self.searchCallback(masterWindow, self.selectedWorkOrder)
 
     #SJ2220222 - Setup connection to wershipping database
