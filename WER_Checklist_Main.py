@@ -729,24 +729,29 @@ class SJTable:
         print('Destructor for SJTable')
 
 def quitter_function():
+    print('quitter_function: Closing sql connection and destroy root object...')
     conn.close()  #SJ5250222 - Close database connection
     root.destroy()
 
-def toolsCallback():
-    pass
+#SJ1230522 - This function creates main menu
+def mainMenu(root):
+    menu = Menu()
+    root.config(menu=menu)
+    tools_menu = Menu(menu, tearoff=0)
+    tools_menu.add_command(label='Backup', command=toolsCallback)
+    tools_menu.add_separator()
+    tools_menu.add_command(label='Exit', command=quitter_function)
+    menu.add_cascade(label='Tools', menu=tools_menu)
 
+
+def toolsCallback():
+    print('Inside toolsCallback...')
+    pass
 
 root = Tk()
 root.protocol('WM_DELETE_WINDOW', quitter_function)
-#SJ1230522 - Create menu
-menu = Menu()
-root.config(menu=menu)
-tools_menu = Menu(menu, tearoff=0)
-tools_menu.add_command(label='Backup', command=toolsCallback)
-tools_menu.add_separator()
-tools_menu.add_command(label='Exit', command=root.destroy)
-menu.add_cascade(label='File', menu=tools_menu)
 app = WER_Main(root)
+mainMenu(root)
 mainloop()
 
 #str(list(productsTypeListbox.curselection())), str(list(numberOfPartsListbox.curselection())),
