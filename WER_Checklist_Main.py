@@ -89,10 +89,12 @@ productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heat
 
 numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'Fan', 'Chain', 'Straps']
 
+usersName = ['Jeffrey, R', 'Jon, C', 'Suzy', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Suilarso, J', 'Dale', 'Sales']
+
 customerName = ''
 workOrder = ''
 dateReceived = ''
-receivedBy = ''
+receivedBy = ''  #SJ4020622 - May not need it; the value can be retrieved from usersOption
 numOfPieces = 0
 ofPieces = 0
 pictureStatus = 0
@@ -103,6 +105,9 @@ partsInBlueBin = 0
 qcCheckedBy = ''
 notes = ''
 qcCheckFlag = False
+usersOption = ''
+usersDropdown = ''
+qcOption = ''
 
 #SJ6070522 - Global var for table movement
 totalRecords = 0
@@ -132,7 +137,7 @@ class WER_Main:
         global customerName
         global workOrder
         global dateReceived
-        global receivedBy
+        #global receivedBy
         global numOfPieces
         global ofPieces
         global pictureStatus
@@ -142,6 +147,8 @@ class WER_Main:
         global partsInBlueBin
         global qcCheckedBy
         global notes
+        global usersOption
+        global usersDropdown
 
         #SJ5110222 - Input field for customer name
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
@@ -166,8 +173,14 @@ class WER_Main:
 
         #SJ6120222 - Input field for Received by
         self.receivedByLabel = Label(master, text='Received by: ').grid(row=RECEIVED_BY_LABEL_ROW, column=RECEIVED_BY_LABEL_COL)
-        receivedBy = Entry(master)
-        receivedBy.grid(row=RECEIVED_BY_ENTRY_ROW, column=RECEIVED_BY_ENTRY_COL)
+        #receivedBy = Entry(master)
+        #receivedBy.grid(row=RECEIVED_BY_ENTRY_ROW, column=RECEIVED_BY_ENTRY_COL)
+        usersOption = StringVar(master)
+        usersOption.set(usersName[0])
+        usersDropdown = OptionMenu(master, usersOption, *usersName)
+        #usersDropdown.config(width=16, height=1)
+        usersDropdown.configure(width=16, height=1)
+        usersDropdown.grid(row=RECEIVED_BY_ENTRY_ROW, column=RECEIVED_BY_ENTRY_COL)
 
         #SJ6120222 - Input field for pieces
         self.piecesLabel = Label(master, text='Piece(s): ').grid(row=PIECES_LABEL_ROW, column=PIECES_LABEL_COL)
@@ -251,8 +264,10 @@ class WER_Main:
         self.todayDate = datetime(1,1,1).now()  #SJ5250222 - Getting today system date
         dateReceived.configure(state=NORMAL)
         dateReceived.set_date(str(self.todayDate.strftime("%Y-%m-%d")))
-        receivedBy.configure(state=NORMAL)
-        receivedBy.delete(0, END)
+        #receivedBy.configure(state=NORMAL)
+        #receivedBy.delete(0, END)
+        usersDropdown.configure(state=NORMAL)
+        usersOption.set(usersName[0])
         numOfPieces.configure(state=NORMAL)
         numOfPieces.delete(0, END)
         numOfPieces.insert(0, '1')
@@ -299,8 +314,11 @@ class WER_Main:
                 workOrder.insert(0, returnRow[werStructure['workOrder']])
                 dateReceived.set_date(returnRow[werStructure['dateReceived']])
                 dateReceived.configure(state=DISABLED)
-                receivedBy.insert(0, returnRow[werStructure['receivedBy']])
-                receivedBy.configure(state=DISABLED)
+                #receivedBy.insert(0, returnRow[werStructure['receivedBy']])
+                #receivedBy.configure(state=DISABLED)
+                self.usersOptionIndex = self.setUsersOption(returnRow[werStructure['receivedBy']])
+                usersOption.set(usersName[self.usersOptionIndex])
+                usersDropdown.configure(state=DISABLED)
                 numOfPieces.delete(0, END)
                 numOfPieces.insert(0, returnRow[werStructure['numOfPieces']])
                 numOfPieces.configure(state=DISABLED)
@@ -336,6 +354,14 @@ class WER_Main:
                 self.browseButton.configure(state=DISABLED)
             else:
                 showwarning(title='Record Not Found', message='Work order '+self.workOrder+' not found.')
+
+    #SJ4020622 - This method set usersOption drop down list to the appropriate index
+    def setUsersOption(self, receivedBy):
+        try:
+            usersIndex = usersName.index(receivedBy)
+        except:
+            usersIndex = 0
+        return (usersIndex)
 
     #SJ3020322 - This method is used to strip of comma and bracket from incoming string
     def removeAlphaChar(self, inString, callingFn):
@@ -381,9 +407,9 @@ class WER_Main:
                 curCursor.execute('''INSERT INTO werChecklist (customerName, workOrder, dateReceived, receivedBy, numOfPieces,
                                ofPieces, pictureStatus, photoesStatus, productsTypeListbox, numberOfPartsListbox, partsInBlueBin,
                                notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (self.customerName, self.workOrder, dateReceived.get_date(),
-                               receivedBy.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
+                               usersOption.get(), eval(numOfPieces.get()), eval(ofPieces.get()), pictureStatus.get(), photoesStatus.get(),
                                str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
-                               partsInBlueBin.get(), notes.get(1.0, END)))
+                               partsInBlueBin.get(), notes.get(1.0, END)))  #SJ4020622 - Change receivedBy to usersOption
                 conn.commit()
 
                 self.initializeInputFields(master)
@@ -398,7 +424,8 @@ class WER_Main:
         self.returnValue = False
         self.customerName = customerName.get().strip()
         self.workOrder = workOrder.get().strip()
-        self.receivedBy = receivedBy.get().strip()
+        #self.receivedBy = receivedBy.get().strip()  #SJ2310522 - Original sttmt. DO NOT REMOVE
+        #self.usersOption = usersOption.get()
         self.numOfPieces = numOfPieces.get().strip()
         self.ofPieces = ofPieces.get().strip()
 
@@ -416,9 +443,9 @@ class WER_Main:
                 workOrder.delete(0, END)  #SJ3130422 - Empty workOrder field
                 workOrder.focus_set()  #SJ3130422 - Put workOrder field to focus
             #SJ3130422 - receivedBy field is empty
-            elif (self.receivedBy == ''):
-                showwarning(title='Empty Field', message='Received by input field is empty.')
-                receivedBy.focus_set()
+            #elif (self.receivedBy == ''):
+                #showwarning(title='Empty Field', message='Received by input field is empty.')
+                #receivedBy.focus_set()
             #SJ3130422 - Check if numOfPieces contains invalid characters
             elif (not (self.numOfPieces.isdigit())):
                 showwarning(title='Invalid Data', message='Pieces must be a number.')
