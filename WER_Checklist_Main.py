@@ -89,7 +89,8 @@ productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heat
 
 numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'Fan', 'Chain', 'Straps']
 
-usersName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Suilarso, J', 'Dale', 'Sales', 'WER chauffeur']
+usersName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
+qcName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
 
 customerName = ''
 workOrder = ''
@@ -102,12 +103,13 @@ photoesStatus = 0
 productsTypeListbox = []
 numberOfPartsListbox = []
 partsInBlueBin = 0
-qcCheckedBy = ''
+qcCheckedBy = ''  #SJ6040622 - May not need it; same reason as receivedBy
 notes = ''
 qcCheckFlag = False
 usersOption = ''
 usersDropdown = ''
 qcOption = ''
+qcDropdown = ''
 
 #SJ6070522 - Global var for table movement
 totalRecords = 0
@@ -145,10 +147,12 @@ class WER_Main:
         global productsTypeListbox
         global numberOfPartsListbox
         global partsInBlueBin
-        global qcCheckedBy
+        #global qcCheckedBy
         global notes
         global usersOption
         global usersDropdown
+        global qcOption
+        global qcDropdown
 
         #SJ5110222 - Input field for customer name
         self.customerLabel = Label(master, text='Customer: ').grid(row=CUSTOMER_LABEL_ROW, column=CUSTOMER_LABEL_COL)
@@ -230,8 +234,16 @@ class WER_Main:
 
         #SJ2220222 - Input field for QC Checked by
         self.qcCheckedByLabel = Label(master, text='QC Checked By: ').grid(row=QC_CHECKED_BY_LABEL_ROW, column=QC_CHECKED_BY_LABEL_COL)
-        qcCheckedBy = Entry(master, state=DISABLED)  #SJ2220222 - Field will be enabled only in edit mode
-        qcCheckedBy.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
+        #qcCheckedBy = Entry(master, state=DISABLED)  #SJ2220222 - Field will be enabled only in edit mode
+        #qcCheckedBy.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
+        qcOption = StringVar(master)
+        self.qcNameNdx = len(qcName)
+        qcOption.set(qcName[self.qcNameNdx-1])
+        qcDropdown = OptionMenu(master, qcOption, *qcName)  #SJ0050622 - separate name list
+        #qcDropdown = OptionMenu(master, qcOption, *usersName)  #SJ0050622 - Sharing namelist with usersDropdown
+        #qcDropdown.config(width=16, height=1)
+        qcDropdown.configure(width=16, height=1, state=DISABLED)
+        qcDropdown.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
 
         #SJ6260222 - QC Check button
         self.qcCheckButton = Button(text='QC Check', state=DISABLED, command=lambda x=master: self.qcCheckCallback(x))
@@ -282,9 +294,14 @@ class WER_Main:
         for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
         self.partsInBlueBinCheckButton.configure(state=NORMAL)
         partsInBlueBin.set(0)
-        qcCheckedBy.configure(state=NORMAL)
-        qcCheckedBy.delete(0, END)
-        qcCheckedBy.configure(state=DISABLED)
+        #qcCheckedBy.configure(state=NORMAL)
+        #qcCheckedBy.delete(0, END)
+        #qcCheckedBy.configure(state=DISABLED)
+        qcDropdown.configure(state=NORMAL)
+        #self.qcNameNdx = len(qcName)
+        #qcOption.set(qcName[self.qcNameNdx-1])  #SJ0050622 - Separate name list
+        qcOption.set(usersName[0])  #SJ0050622 - Sharing name list with usersDropdown
+        qcDropdown.configure(state=DISABLED)
         notes.configure(state=NORMAL)
         notes.delete(1.0, END)
 
@@ -344,10 +361,19 @@ class WER_Main:
                     #SJ0270222 - If reaches here, record is not qc checked yet. Need to show qc check button, disable save and search button
                     self.qcCheckButton.configure(state=NORMAL)
                     qcCheckFlag = True
+                    #qcDropdown.configure(state=NORMAL)
+                    #qcOption.set(qcName[0])
+                    #qcDropdown.configure(state=DISABLED)
                 else:
-                    qcCheckedBy.configure(state=NORMAL)
-                    qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
-                    qcCheckedBy.configure(state=DISABLED)
+                    #qcCheckedBy.configure(state=NORMAL)
+                    #qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
+                    #qcCheckedBy.configure(state=DISABLED)
+                    qcDropdown.configure(state=NORMAL)
+                    self.qcOptionIndex = self.setQcOption(returnRow[werStructure['qcCheckedBy']])
+                    qcOption.set(qcName[self.qcOptionIndex])
+                    #self.qcOptionIndex = self.setUsersOption(returnRow[werStructure['qcCheckedBy']])
+                    #qcOption.set(usersName[self.qcOptionIndex])
+                    qcDropdown.configure(state=DISABLED)
                 notes.insert(END, returnRow[werStructure['notes']])
                 notes.configure(state=DISABLED)
                 self.saveButton.configure(state=DISABLED)
@@ -363,6 +389,14 @@ class WER_Main:
             usersIndex = 0
         return (usersIndex)
 
+    #SJ6040622 - This method set qcOption drop down list to the appropriate index
+    def setQcOption(self, qcCheckedBy):
+        try:
+            qcIndex = qcName.index(qcCheckedBy)
+        except:
+            qcIndex = 0
+        return (qcIndex)
+
     #SJ3020322 - This method is used to strip of comma and bracket from incoming string
     def removeAlphaChar(self, inString, callingFn):
         #SJ3020322 - First we remove the , to be followed by left bracket and finally right brachket
@@ -372,25 +406,35 @@ class WER_Main:
 
     #SJ6260222 - Callback function to handle qc button press
     def qcCheckCallback(self, master):
-        global qcCheckedBy
+        #global qcCheckedBy
         global qcCheckFlag
         global workOrder
+        global qcDropdown
+        global qcOption
         if qcCheckFlag:
             qcCheckFlag = False  #SJ1280222 - Here we set the flag to false as the button functionality had been changed to update
             workOrder.configure(state=DISABLED)  #SJ0170422 - Disabled workOrder field to prevent it from being updated
             self.qcCheckButton.configure(text='Update')
-            qcCheckedBy.configure(state=NORMAL)
-            qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
+            #qcCheckedBy.configure(state=NORMAL)
+            #qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
+            #SJ3080622 - Using dropdown list to select qc name
+            qcDropdown.configure(state=NORMAL)
+            qcOption.set(qcName[0])  #SJ5100622 - Default is set to first element of the list
+            #qcDropdown.configure(state=DISABLED)
+            #self.qcOptionIndex = self.setQcOption(returnRow[werStructure['qcCheckedBy']])
+            #self.qcNameNdx = len(qcName)
+            #qcName.append('None')
         else:
-            if qcCheckedBy.get().strip() == '':
-                showwarning(title='Empty Field', message='Please key in your name or initials.')
-            else:
-                self.workOrder = workOrder.get().strip()
-                self.qcCheckedBy = qcCheckedBy.get().strip()
-                curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (self.qcCheckedBy, self.workOrder))
-                conn.commit()
-                workOrder.configure(state=NORMAL)  #SJ0170422 - Reinstate workOrder field to normal
-                self.initializeInputFields(master)
+            #if qcCheckedBy.get().strip() == '':
+            #    showwarning(title='Empty Field', message='Please key in your name or initials.')
+            #else:
+            self.workOrder = workOrder.get().strip()
+            #self.qcCheckedBy = qcCheckedBy.get().strip()
+            #curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (self.qcCheckedBy, self.workOrder))
+            curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcOption.get(), self.workOrder))
+            conn.commit()
+            workOrder.configure(state=NORMAL)  #SJ0170422 - Reinstate workOrder field to normal
+            self.initializeInputFields(master)
 
     def cancelCallback(self, master):
         global qcCheckFlag
@@ -688,7 +732,8 @@ class WER_Main:
 class selectDateDialog:
     def __init__(self, master):
         self.dateDialog = Toplevel(master)
-        self.fromDate = '0'
+        #self.fromDate = '0'
+        self.fromDate = str(datetime(1,1,1).now())[:10]  #SJ6110622 - Only need the date portion
         #SJ1250422 - Input field for Date received
         self.todayDate = datetime(1,1,1).now()  #SJ1250422 - Getting today system date
         self.dateReceivedLabel = Label(self.dateDialog, text='Please select the date you wish to browse the record from').grid(row=2, column=1)
@@ -704,6 +749,7 @@ class selectDateDialog:
 
     def getFromDate(self):
         return (self.fromDate)
+        #return (self.fromDate[:10])
 
     def __del__(self):
         print('Destructor for selectDateDialog')
