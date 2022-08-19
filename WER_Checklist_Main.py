@@ -89,8 +89,8 @@ productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heat
 
 numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'Fan', 'Chain', 'Straps']
 
-usersName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
-qcName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
+usersName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Daniel, N', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
+qcName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Daniel, N', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
 
 customerName = ''
 workOrder = ''
@@ -472,7 +472,13 @@ class WER_Main:
         #self.usersOption = usersOption.get()
         self.numOfPieces = numOfPieces.get().strip()
         self.ofPieces = ofPieces.get().strip()
+        self.pictureStatus = pictureStatus.get()
+        self.photoesStatus = photoesStatus.get()
+        self.prodType = self.removeAlphaChar(str(productsTypeListbox.curselection()), "Initialize")
+        self.partsList = self.removeAlphaChar(str(numberOfPartsListbox.curselection()), "Initialize")
 
+        print('pictureStatus and photoesStatus', self.pictureStatus, self.photoesStatus)
+        print('productsTypeListbox and numberOfPartsListbox', len(self.prodType), len(self.partsList))
         #SJ3130422 - First we check to see if customerName or workOrder is empty
         if len(self.customerName) == 0 or len(self.workOrder) == 0:
             showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
@@ -508,6 +514,16 @@ class WER_Main:
             elif (eval(self.numOfPieces) != eval(self.ofPieces)):
                 showwarning(title='Invalid Data', message='Pieces and Of Pieces do not match.')
                 numOfPieces.focus_set()
+            #SJ4180822 - Verify if picture check button is checked
+            elif (self.pictureStatus == 0):
+                showwarning(title='Invalid Data', message='Pictures field is not checked.')
+                self.pictureCheckButton.focus_set()
+            #SJ4180822 - Verify if photoes check button is checked
+            elif (self.photoesStatus == 0):
+                showwarning(title='Invalid Data', message='Photoes Uploaded field is not checked.')
+                self.photoesCheckButton.focus_set()
+            #print('pictureStatus and photoesStatus', self.pictureStatus, self.photoesStatus)
+            #print('productsTypeListbox and numberOfPartsListbox', len(self.prodType), len(self.partsList))
             else:
                 self.returnValue = True
 
