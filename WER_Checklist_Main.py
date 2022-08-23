@@ -468,7 +468,6 @@ class WER_Main:
         self.returnValue = False
         self.customerName = customerName.get().strip()
         self.workOrder = workOrder.get().strip()
-        #self.receivedBy = receivedBy.get().strip()  #SJ2310522 - Original sttmt. DO NOT REMOVE
         #self.usersOption = usersOption.get()
         self.numOfPieces = numOfPieces.get().strip()
         self.ofPieces = ofPieces.get().strip()
@@ -492,10 +491,6 @@ class WER_Main:
                 showwarning(title='Duplicate WOP', message='It seems '+self.workOrder+' had been used.')
                 workOrder.delete(0, END)  #SJ3130422 - Empty workOrder field
                 workOrder.focus_set()  #SJ3130422 - Put workOrder field to focus
-            #SJ3130422 - receivedBy field is empty
-            #elif (self.receivedBy == ''):
-                #showwarning(title='Empty Field', message='Received by input field is empty.')
-                #receivedBy.focus_set()
             #SJ3130422 - Check if numOfPieces contains invalid characters
             elif (not (self.numOfPieces.isdigit())):
                 showwarning(title='Invalid Data', message='Pieces must be a number.')
@@ -522,8 +517,12 @@ class WER_Main:
             elif (self.photoesStatus == 0):
                 showwarning(title='Invalid Data', message='Photoes Uploaded field is not checked.')
                 self.photoesCheckButton.focus_set()
-            #print('pictureStatus and photoesStatus', self.pictureStatus, self.photoesStatus)
-            #print('productsTypeListbox and numberOfPartsListbox', len(self.prodType), len(self.partsList))
+            #SJ1220822 - Verify if product type is being selected
+            elif (len(self.prodType) == 0):
+                showwarning(title='Invalid Data', message='No received item is being selected.')
+            #SJ1220822 - Verify if part list is being selected
+            elif (len(self.partsList) == 0):
+                showwarning(title='Invalid Data', message='No part is being selected.')
             else:
                 self.returnValue = True
 
