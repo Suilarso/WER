@@ -139,7 +139,6 @@ class WER_Main:
         global customerName
         global workOrder
         global dateReceived
-        #global receivedBy
         global numOfPieces
         global ofPieces
         global pictureStatus
@@ -147,7 +146,6 @@ class WER_Main:
         global productsTypeListbox
         global numberOfPartsListbox
         global partsInBlueBin
-        #global qcCheckedBy
         global notes
         global usersOption
         global usersDropdown
@@ -177,8 +175,6 @@ class WER_Main:
 
         #SJ6120222 - Input field for Received by
         self.receivedByLabel = Label(master, text='Received by: ').grid(row=RECEIVED_BY_LABEL_ROW, column=RECEIVED_BY_LABEL_COL)
-        #receivedBy = Entry(master)
-        #receivedBy.grid(row=RECEIVED_BY_ENTRY_ROW, column=RECEIVED_BY_ENTRY_COL)
         usersOption = StringVar(master)
         usersOption.set(usersName[0])
         usersDropdown = OptionMenu(master, usersOption, *usersName)
@@ -234,13 +230,10 @@ class WER_Main:
 
         #SJ2220222 - Input field for QC Checked by
         self.qcCheckedByLabel = Label(master, text='QC Checked By: ').grid(row=QC_CHECKED_BY_LABEL_ROW, column=QC_CHECKED_BY_LABEL_COL)
-        #qcCheckedBy = Entry(master, state=DISABLED)  #SJ2220222 - Field will be enabled only in edit mode
-        #qcCheckedBy.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
         qcOption = StringVar(master)
         self.qcNameNdx = len(qcName)
         qcOption.set(qcName[self.qcNameNdx-1])
         qcDropdown = OptionMenu(master, qcOption, *qcName)  #SJ0050622 - separate name list
-        #qcDropdown = OptionMenu(master, qcOption, *usersName)  #SJ0050622 - Sharing namelist with usersDropdown
         #qcDropdown.config(width=16, height=1)
         qcDropdown.configure(width=16, height=1, state=DISABLED)
         qcDropdown.grid(row=QC_CHECKED_BY_ENTRY_ROW, column=QC_CHECKED_BY_ENTRY_COL)
@@ -276,8 +269,6 @@ class WER_Main:
         self.todayDate = datetime(1,1,1).now()  #SJ5250222 - Getting today system date
         dateReceived.configure(state=NORMAL)
         dateReceived.set_date(str(self.todayDate.strftime("%Y-%m-%d")))
-        #receivedBy.configure(state=NORMAL)
-        #receivedBy.delete(0, END)
         usersDropdown.configure(state=NORMAL)
         usersOption.set(usersName[0])
         numOfPieces.configure(state=NORMAL)
@@ -294,9 +285,6 @@ class WER_Main:
         for c in self.numberOfPartsList: numberOfPartsListbox.select_clear(int(c))
         self.partsInBlueBinCheckButton.configure(state=NORMAL)
         partsInBlueBin.set(0)
-        #qcCheckedBy.configure(state=NORMAL)
-        #qcCheckedBy.delete(0, END)
-        #qcCheckedBy.configure(state=DISABLED)
         qcDropdown.configure(state=NORMAL)
         #self.qcNameNdx = len(qcName)
         #qcOption.set(qcName[self.qcNameNdx-1])  #SJ0050622 - Separate name list
@@ -331,8 +319,6 @@ class WER_Main:
                 workOrder.insert(0, returnRow[werStructure['workOrder']])
                 dateReceived.set_date(returnRow[werStructure['dateReceived']])
                 dateReceived.configure(state=DISABLED)
-                #receivedBy.insert(0, returnRow[werStructure['receivedBy']])
-                #receivedBy.configure(state=DISABLED)
                 self.usersOptionIndex = self.setUsersOption(returnRow[werStructure['receivedBy']])
                 usersOption.set(usersName[self.usersOptionIndex])
                 usersDropdown.configure(state=DISABLED)
@@ -365,18 +351,16 @@ class WER_Main:
                     #qcOption.set(qcName[0])
                     #qcDropdown.configure(state=DISABLED)
                 else:
-                    #qcCheckedBy.configure(state=NORMAL)
-                    #qcCheckedBy.insert(0, returnRow[werStructure['qcCheckedBy']])
-                    #qcCheckedBy.configure(state=DISABLED)
                     qcDropdown.configure(state=NORMAL)
                     self.qcOptionIndex = self.setQcOption(returnRow[werStructure['qcCheckedBy']])
                     qcOption.set(qcName[self.qcOptionIndex])
                     #self.qcOptionIndex = self.setUsersOption(returnRow[werStructure['qcCheckedBy']])
                     #qcOption.set(usersName[self.qcOptionIndex])
                     qcDropdown.configure(state=DISABLED)
-                notes.insert(END, returnRow[werStructure['notes']])
-                notes.configure(state=DISABLED)
-                self.saveButton.configure(state=DISABLED)
+                notes.insert(END, returnRow[werStructure['notes']].strip())
+                notes.focus_set()  #SJ6270822 - Set to focus so that user can edit this field
+                #notes.configure(state=DISABLED)  #SJ6270822 - This is original design before implementation of edit
+                #self.saveButton.configure(state=DISABLED)  #SJ6270822 - This is original design before implementation of edit
                 self.browseButton.configure(state=DISABLED)
             else:
                 showwarning(title='Record Not Found', message='Work order '+self.workOrder+' not found.')
@@ -415,8 +399,6 @@ class WER_Main:
             qcCheckFlag = False  #SJ1280222 - Here we set the flag to false as the button functionality had been changed to update
             workOrder.configure(state=DISABLED)  #SJ0170422 - Disabled workOrder field to prevent it from being updated
             self.qcCheckButton.configure(text='Update')
-            #qcCheckedBy.configure(state=NORMAL)
-            #qcCheckedBy.focus_set()  #SJ1210222 - Put this field into focus
             #SJ3080622 - Using dropdown list to select qc name
             qcDropdown.configure(state=NORMAL)
             qcOption.set(qcName[0])  #SJ5100622 - Default is set to first element of the list
@@ -425,11 +407,7 @@ class WER_Main:
             #self.qcNameNdx = len(qcName)
             #qcName.append('None')
         else:
-            #if qcCheckedBy.get().strip() == '':
-            #    showwarning(title='Empty Field', message='Please key in your name or initials.')
-            #else:
             self.workOrder = workOrder.get().strip()
-            #self.qcCheckedBy = qcCheckedBy.get().strip()
             #curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (self.qcCheckedBy, self.workOrder))
             curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (qcOption.get(), self.workOrder))
             conn.commit()

@@ -77,9 +77,9 @@ Jul 28, 22 - Amendment request from users
 When a record is saved, it will only be browsed or update qc check list field and no other operations like edit will be allowed;
 users request that once a record is saved, the record be allowed to edit only the 'Note' field.
 Urgency: moderate.
-Status:
+Status: This amendment is resolved on 
 
 Jul 28, 22 - Record is able to save when 'Pictures' and 'Photoes Uploaded?' fields are left empty.
 Users request that these two fields be included in the completeness check.
 Severity status: minor.
-Status:
+Status: This amendment is resolved on Aug 18, 22
