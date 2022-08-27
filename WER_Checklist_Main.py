@@ -105,6 +105,7 @@ numberOfPartsListbox = []
 partsInBlueBin = 0
 qcCheckedBy = ''  #SJ6040622 - May not need it; same reason as receivedBy
 notes = ''
+editNotesFlag = False  #SJ6270822 - User request to allow edit after the record is being saved
 qcCheckFlag = False
 usersOption = ''
 usersDropdown = ''
@@ -292,6 +293,7 @@ class WER_Main:
         qcDropdown.configure(state=DISABLED)
         notes.configure(state=NORMAL)
         notes.delete(1.0, END)
+        editNotesFlag = False  #SJ6270822 - To implement user request to allow edit notes field
 
         #SJ6050322 - Put back all button functionality accordingly
         self.saveButton.configure(state=NORMAL)
@@ -301,6 +303,7 @@ class WER_Main:
     #SJ0270222 - Search function to handle search button press
     def searchCallback(self, master, optionalWorkOrder=0):
         global qcCheckFlag
+        global editNotesFlag
 
         if (optionalWorkOrder != 0):
             self.workOrder = optionalWorkOrder.strip()
@@ -359,6 +362,7 @@ class WER_Main:
                     qcDropdown.configure(state=DISABLED)
                 notes.insert(END, returnRow[werStructure['notes']].strip())
                 notes.focus_set()  #SJ6270822 - Set to focus so that user can edit this field
+                editNotesFlag = True
                 #notes.configure(state=DISABLED)  #SJ6270822 - This is original design before implementation of edit
                 #self.saveButton.configure(state=DISABLED)  #SJ6270822 - This is original design before implementation of edit
                 self.browseButton.configure(state=DISABLED)
@@ -422,7 +426,14 @@ class WER_Main:
         self.initializeInputFields(master)
 
     def saveCallback(self, master):
-        if (self.verifyInputData(master) == True):
+        global editNotesFlag
+        global workOrder
+
+        if (editNotesFlag):
+            self.workOrder = workOrder.get().strip()
+            curCursor.execute('UPDATE werChecklist SET notes=? WHERE workOrder = ?', (notes.get(1.0, END), self.workOrder))
+            conn.commit()
+        elif (self.verifyInputData(master) == True):
             #self.prodType = productsTypeListbox.curselection()
             #self.prodString = list(self.prodType)
             try:
@@ -434,9 +445,11 @@ class WER_Main:
                                partsInBlueBin.get(), notes.get(1.0, END)))  #SJ4020622 - Change receivedBy to usersOption
                 conn.commit()
 
-                self.initializeInputFields(master)
+                #self.initializeInputFields(master)  #SJ6270822 - Move outside if .. else sttmt
             except:
                 showwarning(title='Critical Error', message='Data entry error. Please check all input data.')
+
+        self.initializeInputFields(master)
 
     #SJ3130422 - This method verify input data validity
     def verifyInputData(self, master):
