@@ -259,6 +259,7 @@ class WER_Main:
         self.browseButton.grid(row=BROWSE_BUTTON_ROW, column=BROWSE_BUTTON_COL)
 
     def initializeInputFields(self, master):
+        global editNotesFlag  #SJ6270822 - Added
         productsTypeListbox.configure(selectmode=MULTIPLE)
         self.productsTypeList = self.removeAlphaChar(str(productsTypeListbox.curselection()), "Initialize")
         numberOfPartsListbox.configure(selectmode=MULTIPLE)
@@ -410,6 +411,7 @@ class WER_Main:
             #self.qcOptionIndex = self.setQcOption(returnRow[werStructure['qcCheckedBy']])
             #self.qcNameNdx = len(qcName)
             #qcName.append('None')
+            self.saveButton.configure(state=DISABLED)  #SJ6270822 - Edit note field is not allowed while doing qc check
         else:
             self.workOrder = workOrder.get().strip()
             #curCursor.execute('UPDATE werChecklist SET qcCheckedBy=? WHERE workOrder = ?', (self.qcCheckedBy, self.workOrder))
@@ -433,6 +435,7 @@ class WER_Main:
             self.workOrder = workOrder.get().strip()
             curCursor.execute('UPDATE werChecklist SET notes=? WHERE workOrder = ?', (notes.get(1.0, END), self.workOrder))
             conn.commit()
+            self.initializeInputFields(master)
         elif (self.verifyInputData(master) == True):
             #self.prodType = productsTypeListbox.curselection()
             #self.prodString = list(self.prodType)
@@ -444,12 +447,9 @@ class WER_Main:
                                str(productsTypeListbox.curselection()), str(numberOfPartsListbox.curselection()),
                                partsInBlueBin.get(), notes.get(1.0, END)))  #SJ4020622 - Change receivedBy to usersOption
                 conn.commit()
-
-                #self.initializeInputFields(master)  #SJ6270822 - Move outside if .. else sttmt
+                self.initializeInputFields(master)
             except:
                 showwarning(title='Critical Error', message='Data entry error. Please check all input data.')
-
-        self.initializeInputFields(master)
 
     #SJ3130422 - This method verify input data validity
     def verifyInputData(self, master):
@@ -465,10 +465,8 @@ class WER_Main:
         self.pictureStatus = pictureStatus.get()
         self.photoesStatus = photoesStatus.get()
         self.prodType = self.removeAlphaChar(str(productsTypeListbox.curselection()), "Initialize")
-        self.partsList = self.removeAlphaChar(str(numberOfPartsListbox.curselection()), "Initialize")
+        #self.partsList = self.removeAlphaChar(str(numberOfPartsListbox.curselection()), "Initialize")
 
-        print('pictureStatus and photoesStatus', self.pictureStatus, self.photoesStatus)
-        print('productsTypeListbox and numberOfPartsListbox', len(self.prodType), len(self.partsList))
         #SJ3130422 - First we check to see if customerName or workOrder is empty
         if len(self.customerName) == 0 or len(self.workOrder) == 0:
             showwarning(title='Missing Fields', message='Check the Customer Name or WOP fields')
@@ -512,8 +510,10 @@ class WER_Main:
             elif (len(self.prodType) == 0):
                 showwarning(title='Invalid Data', message='No received item is being selected.')
             #SJ1220822 - Verify if part list is being selected
-            elif (len(self.partsList) == 0):
-                showwarning(title='Invalid Data', message='No part is being selected.')
+            #SJ6270822 - No need to verify part list as it can be empty because customer may not
+            #SJ6270822 - accompany its product with any part when brought in for service
+            #elif (len(self.partsList) == 0):
+            #    showwarning(title='Invalid Data', message='No part is being selected.')
             else:
                 self.returnValue = True
 
