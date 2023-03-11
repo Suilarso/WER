@@ -83,3 +83,11 @@ Jul 28, 22 - Record is able to save when 'Pictures' and 'Photoes Uploaded?' fiel
 Users request that these two fields be included in the completeness check.
 Severity status: minor.
 Status: This amendment is resolved on Aug 18, 22
+
+Aug 30, 22 - User request to add 'Fuel Cap' in the part list.
+Severity status: minor.
+Status: Pending for more amendments before work can be done.
+
+Mar 1, 23 - Shipping request new staff name to be added in the usersName, and qcName.
+Severity status: none.
+Status: New names added on Mar 3, 2023. Pending compilation and testing

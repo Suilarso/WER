@@ -89,8 +89,8 @@ productsType = ['Radiator', 'CAC', 'Condenser', 'Fuel Tank', 'Evaporator', 'Heat
 
 numberOfParts = ['Fitting', 'Hoses', 'Sensors', 'Brackets', 'Mounts', 'Rad Cap', 'Shroud', 'Fan', 'Chain', 'Straps']
 
-usersName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Daniel, N', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
-qcName = ['Jeffrey, R', 'Jon, C', 'Suzy, K', 'Daniel, N', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
+usersName = ['Jeffrey, R', 'Suzy, K', 'Daniel, N', 'Oleksandr, R', 'Jeff, M', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
+qcName = ['Jeffrey, R', 'Suzy, K', 'Daniel, N', 'Oleksandr, R', 'Jeff, M', 'Ian, L', 'Ruslan, L', 'Jason, H', 'Sales', 'WER chauffeur']
 
 customerName = ''
 workOrder = ''
